@@ -1,0 +1,62 @@
+﻿<Window x:Class="qaImageViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:qaImageViewer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1200
+        ">
+    <Grid>
+        <TabControl AutomationProperties.Name="TabControl_MainNavigation">
+            <TabItem Header="View">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="21*"/>
+                        <ColumnDefinition Width="15*"/>
+                        <ColumnDefinition Width="77*"/>
+                        <ColumnDefinition Width="1081*"/>
+                    </Grid.ColumnDefinitions>
+                    <Image HorizontalAlignment="Left" Height="522" Margin="46,136,0,0" VerticalAlignment="Top" Width="679" Grid.Column="3"/>
+                    <ListView Margin="792,165,45,150" Grid.Column="3">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <Button Content="+" HorizontalAlignment="Left" Margin="1014,136,0,0" VerticalAlignment="Top" Height="24" Width="28" Grid.Column="3"/>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Import Profiles" AutomationProperties.Name="TabItem_ImportProfiles">
+                <Grid Background="#FFE5E5E5" AutomationProperties.Name="TabContainer_ImportProfiles">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="38*"/>
+                        <ColumnDefinition Width="559*"/>
+                    </Grid.ColumnDefinitions>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsEdit" AutoGenerateColumns="False" Margin="34,56,721,359" GridLinesVisibility="All" Grid.Column="1" AutomationProperties.Name="DataGrid_ImportColumnMappingsEdit" CanUserAddRows="False">
+                        
+                    </DataGrid>
+                    <Button x:Name="Button_AddColumnMapping" Content="Add" HorizontalAlignment="Left" Margin="346,426,0,0" VerticalAlignment="Top" AutomationProperties.Name="Button_AddColumnMapping" Width="51" Grid.Column="1" Click="Button_AddColumnMapping_Click"/>
+                    <ComboBox x:Name="ComboBox_ImportProfilesSelector" Text="--Select Profile--" IsEditable="True" Grid.Column="1" HorizontalAlignment="Left" Margin="386,20,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ImportProfilesSelector_SelectionChanged" KeyUp="ComboBox_ImportProfilesSelector_KeyUp" IsTextSearchEnabled="False"/>
+                    <Button x:Name="Button_SaveImportProfile" Content="+" Grid.Column="1" IsEnabled="False" HorizontalAlignment="Left" Margin="506,20,0,0" VerticalAlignment="Top" Click="Button_SaveImportProfile_Click" Height="22" Width="15"/>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsView" Margin="460,56,295,359" GridLinesVisibility="All" Grid.Column="1" AutomationProperties.Name="Table_ColumnMappings" IsReadOnly="True" >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Column Alias" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Map From Excel Column"/>
+                            <DataGridComboBoxColumn x:Name="DataGridComboBoxColumn_ColumnType2" Header="Column Type"/>
+                            <DataGridCheckBoxColumn Header="Is Filepath"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Export Profiles">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsViewOnly" Margin="85,67,641,252"/>
+                    <ComboBox x:Name="ComboBox_ExportProfilesImportProfiles" HorizontalAlignment="Left" Margin="597,31,0,0" VerticalAlignment="Top" Width="120"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
