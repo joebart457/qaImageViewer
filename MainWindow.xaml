@@ -7,8 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1200
         ">
+
     <Grid>
-        <TabControl AutomationProperties.Name="TabControl_MainNavigation">
+        <TabControl AutomationProperties.Name="TabControl_MainNavigation" SelectionChanged="TabControl_SelectionChanged">
             <TabItem Header="View">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
@@ -29,32 +30,38 @@
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Import Profiles" AutomationProperties.Name="TabItem_ImportProfiles">
+            <TabItem Header="Mapping Profiles" AutomationProperties.Name="TabItem_ImportProfiles">
                 <Grid Background="#FFE5E5E5" AutomationProperties.Name="TabContainer_ImportProfiles">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="38*"/>
                         <ColumnDefinition Width="559*"/>
                     </Grid.ColumnDefinitions>
-                    <DataGrid x:Name="DataGrid_ImportColumnMappingsEdit" AutoGenerateColumns="False" Margin="34,56,721,359" GridLinesVisibility="All" Grid.Column="1" AutomationProperties.Name="DataGrid_ImportColumnMappingsEdit" CanUserAddRows="False">
-                        
-                    </DataGrid>
-                    <Button x:Name="Button_AddColumnMapping" Content="Add" HorizontalAlignment="Left" Margin="346,426,0,0" VerticalAlignment="Top" AutomationProperties.Name="Button_AddColumnMapping" Width="51" Grid.Column="1" Click="Button_AddColumnMapping_Click"/>
-                    <ComboBox x:Name="ComboBox_ImportProfilesSelector" Text="--Select Profile--" IsEditable="True" Grid.Column="1" HorizontalAlignment="Left" Margin="386,20,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ImportProfilesSelector_SelectionChanged" KeyUp="ComboBox_ImportProfilesSelector_KeyUp" IsTextSearchEnabled="False"/>
-                    <Button x:Name="Button_SaveImportProfile" Content="+" Grid.Column="1" IsEnabled="False" HorizontalAlignment="Left" Margin="506,20,0,0" VerticalAlignment="Top" Click="Button_SaveImportProfile_Click" Height="22" Width="15"/>
-                    <DataGrid x:Name="DataGrid_ImportColumnMappingsView" Margin="460,56,295,359" GridLinesVisibility="All" Grid.Column="1" AutomationProperties.Name="Table_ColumnMappings" IsReadOnly="True" >
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Column Alias" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Map From Excel Column"/>
-                            <DataGridComboBoxColumn x:Name="DataGridComboBoxColumn_ColumnType2" Header="Column Type"/>
-                            <DataGridCheckBoxColumn Header="Is Filepath"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <Rectangle HorizontalAlignment="Left" Height="667" Margin="20,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.ColumnSpan="2"/>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsEdit" AutoGenerateColumns="False" Margin="60,81,746,77" GridLinesVisibility="All" AutomationProperties.Name="DataGrid_ImportColumnMappingsEdit" CanUserAddRows="False" CanUserDeleteRows="False" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
+                    <Button x:Name="Button_AddColumnMapping" Content="+Row" HorizontalAlignment="Left" Margin="321,46,0,0" VerticalAlignment="Top" AutomationProperties.Name="Button_AddColumnMapping" Width="51" Grid.Column="1" Click="Button_AddColumnMapping_Click"/>
+                    <ComboBox x:Name="ComboBox_ImportProfilesSelector" Text="--Select Profile--" IsEditable="True" HorizontalAlignment="Left" Margin="38,43,0,0" VerticalAlignment="Top" Width="182" SelectionChanged="ComboBox_ImportProfilesSelector_SelectionChanged" KeyUp="ComboBox_ImportProfilesSelector_KeyUp" IsTextSearchEnabled="False" Height="26" Grid.ColumnSpan="2"/>
+                    <Button x:Name="Button_SaveImportProfile" Content="+" Grid.Column="1" IsEnabled="False" HorizontalAlignment="Left" Margin="144,43,0,0" VerticalAlignment="Top" Click="Button_SaveImportProfile_Click" Height="26" Width="22"/>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsView" Margin="60,81,746,77" GridLinesVisibility="All" AutomationProperties.Name="Table_ColumnMappings" IsReadOnly="True" Grid.ColumnSpan="2" />
+                    <Rectangle HorizontalAlignment="Left" Height="667" Margin="624,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.Column="1"/>
+                    <DataGrid x:Name="DataGrid_ExportColumnMappingsEdit" Margin="665,81,65,77" Grid.Column="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
+                    <Label Content="Export Mapping" Grid.Column="1" HorizontalAlignment="Left" Margin="648,41,0,0" VerticalAlignment="Top" Height="34" Width="109" FontSize="14"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Export Profiles">
+            <TabItem Header="Import" HorizontalAlignment="Left" Margin="-2,-2,0,0" Width="52">
                 <Grid Background="#FFE5E5E5">
-                    <DataGrid x:Name="DataGrid_ImportColumnMappingsViewOnly" Margin="85,67,641,252"/>
-                    <ComboBox x:Name="ComboBox_ExportProfilesImportProfiles" HorizontalAlignment="Left" Margin="597,31,0,0" VerticalAlignment="Top" Width="120"/>
+                    <Rectangle HorizontalAlignment="Left" Height="211" Margin="367,16,0,0" Stroke="Black" VerticalAlignment="Top" Width="750"/>
+                    <ComboBox x:Name="ComboBox_MappingProfilesSelector" HorizontalAlignment="Left" Margin="99,50,0,0" VerticalAlignment="Top" Width="217"/>
+                    <DataGrid x:Name="DataGrid_PreviousImportResults" Margin="411,50,121,555" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
+                    <Label Content="Previous Imports" HorizontalAlignment="Left" Margin="380,16,0,0" VerticalAlignment="Top" Height="34" Width="141" FontSize="14"/>
+                    <TextBox x:Name="TextBox_ExcelTargetFile" HorizontalAlignment="Left" Margin="117,138,0,0" Text="--Choose File--" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                    <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="242,138,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click"/>
+                    <Rectangle HorizontalAlignment="Left" Height="367" Margin="132,341,0,0" Stroke="Black" VerticalAlignment="Top" Width="964"/>
+                    <DataGrid x:Name="DataGrid_ExcelPreview" Margin="320,369,132,64" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
+
+                    <ProgressBar x:Name="ProgressBar_LoadingExcelPreview" HorizontalAlignment="Left" Height="44" Margin="380,525,0,0" VerticalAlignment="Top" Width="444"/>
+                    <Label x:Name="Label_LoadingExcelPreview" Content="Loading Preview..." HorizontalAlignment="Left" Margin="380,504,0,0" VerticalAlignment="Top" Width="136"/>
+                    <Label x:Name="Label_UnableToLoadExcelPreview" Content="Unable to load preview" HorizontalAlignment="Center" Margin="0,530,0,0" VerticalAlignment="Top" Width="194" FontSize="18"/>
+                    <ListBox x:Name="ListBox_ExcelPreviewSheets" Margin="151,369,879,64" SelectionChanged="ListBox_ExcelPreviewSheets_SelectionChanged"/>
                 </Grid>
             </TabItem>
         </TabControl>

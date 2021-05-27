@@ -65,6 +65,33 @@ namespace qaImageViewer.Repository
             }
         }
 
+        public static int GetIntegerOption(ConnectionManager cm, string param, int onFail)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+                var conn = cm.GetSQLConnection();
+                var selectParamCmd = conn.CreateCommand();
+
+                selectParamCmd.CommandText = @"SELECT param, value FROM config WHERE param like @ParameterName";
+                selectParamCmd.Parameters.Add(new SQLiteParameter("@ParameterName", "%" + param + "%"));
+
+                int result = onFail;
+                var reader = selectParamCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result = int.Parse(reader.GetString(1));
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                return onFail;
+            }
+        }
+
 
         public static void SetParameterValue(ConnectionManager cm, string param, string value)
         {

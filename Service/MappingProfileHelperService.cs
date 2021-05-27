@@ -14,13 +14,13 @@ namespace qaImageViewer.Service
         {
             try
             {
-                if (profile is not null && profile.ImportMapping is not null)
+                if (profile is not null)
                 {
-                    if (profile.ImportMapping.ColumnMappings.Count == 0)
+                    if (profile.ImportColumnMappings.Count == 0)
                     {
                         return "c1";
                     }
-                    ColumnMapping mapping = profile.ImportMapping.ColumnMappings.OrderBy(x => x.ColumnName).LastOrDefault();
+                    ImportColumnMapping mapping = ColumnMappingService.ConvertFromListItem(profile.ImportColumnMappings.OrderBy(x => x.ColumnName).LastOrDefault());
                     return $"c{GetNextColumnIndex(mapping.ColumnName)}";
                 }
                 throw new Exception("cannot get next column for malformed profile");

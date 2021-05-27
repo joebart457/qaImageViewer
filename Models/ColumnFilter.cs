@@ -8,7 +8,7 @@ namespace qaImageViewer.Models
 {
     class ColumnFilter
     {
-        public ColumnMapping Mapping { get; set; }
+        public ImportColumnMapping Mapping { get; set; }
         public string Filter { get; set; }
     }
 }

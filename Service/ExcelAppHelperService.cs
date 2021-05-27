@@ -1,18 +1,27 @@
 ﻿
 
+using qaImageViewer.Service;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace qaImageViewer
 {
 
     public class ExcelAppHelperService
     {
-        static public List<string> GetExcelColumnOptionsAsList()
+
+        readonly static string IGNORE_OPTION = "IGNORE";
+        static public List<string> GetExcelColumnOptionsAsList(bool includeIgnoreOption = false)
         {
             List<string> excelColumnOptions = new List<string>();
+            if (includeIgnoreOption)
+            {
+                excelColumnOptions.Add(IGNORE_OPTION);
+            }
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 26; j++)
@@ -22,6 +31,40 @@ namespace qaImageViewer
             }
 
             return excelColumnOptions;
+        }
+
+        static public List<List<string>> GetSheetData(Excel.Worksheet worksheet, int maxRows, int maxColumns)
+        {
+            try
+            {
+                int usedRowCount = worksheet.UsedRange.Rows.Count;
+                int usedColumnCount = worksheet.UsedRange.Columns.Count;
+
+                int maxColumnIndex = maxColumns < usedColumnCount ? maxColumns : usedColumnCount;
+                int maxRowIndex = maxRows < usedRowCount ? maxRows : usedRowCount;
+                List<List<string>> data = new List<List<string>>();
+                for (int i = 1; i <= maxRowIndex; i++)
+                {
+                    List<string> rowValues = new List<string>();
+                    for (int j = 1; j <= maxColumnIndex; j++)
+                    {
+                        Excel.Range intermediateValue = (Excel.Range)worksheet.Cells[i, j];
+                        string valueString = "NULL";
+                        if (intermediateValue is not null)
+                        {
+                            valueString = Convert.ToString(intermediateValue.Value);
+                        } 
+                        rowValues.Add(valueString);
+                    }
+                    data.Add(rowValues);
+                }
+                return data;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                return new List<List<String>>();
+            }
         }
     }
 

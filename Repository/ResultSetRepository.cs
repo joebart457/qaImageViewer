@@ -46,10 +46,10 @@ namespace qaImageViewer.Repository
             }
         }
 
-        private static string CreateColumnDefinitions(List<ColumnMapping> mappings)
+        private static string CreateColumnDefinitions(List<ImportColumnMapping> mappings)
         {
             string result = "";
-            foreach(ColumnMapping map in mappings)
+            foreach(ImportColumnMapping map in mappings)
             {
                 result += $"{map.ColumnName} {GetTypeString(map.ColumnType)}, ";
             }
@@ -127,12 +127,12 @@ namespace qaImageViewer.Repository
                 string columnsToSelect = "id";
                 string columnValuesToInsert = "";
 
-                if (profile is not null && profile.ImportMapping is not null)
+                if (profile is not null)
                 {
-                    foreach (ColumnMapping mapping in profile.ImportMapping.ColumnMappings)
+                    foreach (ImportColumnMappingListItem mapping in profile.ImportColumnMappings)
                     {
                         columnsToSelect += $", {mapping.ColumnName}";
-                        DocumentColumn column = document.Columns.Find(d => d.Mapping == mapping);
+                        DocumentColumn column = document.Columns.Find(d => d.Mapping.Id == mapping.Id); // for now just try to match on id
                         object parameterValue = column is null ? null : column.Value;
                         string parameterName = mapping.ColumnName;
                         columnValuesToInsert += columnValuesToInsert.Length > 0 ? $", {parameterName}" : parameterName;
@@ -162,9 +162,9 @@ namespace qaImageViewer.Repository
             // Build query
             string columnsToSelect = "id";
 
-            if (profile is not null && profile.ImportMapping is not null)
+            if (profile is not null)
             {
-                foreach (ColumnMapping mapping in profile.ImportMapping.ColumnMappings)
+                foreach (ImportColumnMappingListItem mapping in profile.ImportColumnMappings)
                 {
                     columnsToSelect += $", {mapping.ColumnName}";
                 }
@@ -234,11 +234,11 @@ namespace qaImageViewer.Repository
                         Columns = new List<DocumentColumn>()
                     };
 
-                    for (int i = 0; i < profile.ImportMapping.ColumnMappings.Count; i++)
+                    for (int i = 0; i < profile.ImportColumnMappings.Count; i++)
                     {
                         docToAdd.Columns.Add(new DocumentColumn
                         {
-                            Mapping = profile.ImportMapping.ColumnMappings[i],
+                            Mapping = ColumnMappingService.ConvertFromListItem(profile.ImportColumnMappings[i]),
                             Value = reader.GetValue(i + 1)
                         });
                         

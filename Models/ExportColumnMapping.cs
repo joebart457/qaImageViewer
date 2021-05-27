@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace qaImageViewer.Models
 {
-
-    class ImportTableMapping
+    class ExportColumnMapping
     {
+        public int Id { get; set; }
         public int ProfileId { get; set; }
-        public List<ImportColumnMapping> ColumnMappings = new List<ImportColumnMapping>();
+        public int ImportColumnMappingId { get; set; }
+        public string ExcelColumnAlias { get; set; }
     }
 }

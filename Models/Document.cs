@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace qaImageViewer.Models
 {
     class DocumentColumn { 
-        public ColumnMapping Mapping { get; set; }
+        public ImportColumnMapping Mapping { get; set; }
         public object Value { get; set; }
     }
 

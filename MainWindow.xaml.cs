@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,27 +15,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
+using qaImageViewer.Converters;
 using qaImageViewer.Models;
 using qaImageViewer.Repository;
 using qaImageViewer.Service;
 
+using Excel = Microsoft.Office.Interop.Excel;
+
 namespace qaImageViewer
 {
-    class XTEST { 
-        public string Val { get; set; }
-
-    }
-
-    class XTEST_PARENT
-    {
-        public XTEST xTest = new XTEST { Val = "G" };
-
-        public override string ToString()
-        {
-            return xTest.Val;
-        }
-    }
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -48,12 +37,80 @@ namespace qaImageViewer
             InitializeComponent();
             SetupImportColumnMappingsViewColumns();
             SetupImportColumnMappingsEditColumns();
+            SetupExportColumnMappingsEditColumns();
             PopulateImportProfilesComboBox();
+        }
+
+        private void PopulateOpenSheetsTreeview()
+        {
+            try
+            {
+               Excel.Application oExcelApp = (Excel.Application)System.Runtime.InteropServices.Marshal.BindToMoniker("C:\\Users\\system.developer\\Desktop\\archive\\PCS Shop Sworn Construction Statement.xlsx");
+                MessageBox.Show(oExcelApp.ActiveWorkbook.Name);
+
+                /*
+                TreeView_OpenSheets.Items.Clear();
+                uint counter = 0;
+                foreach (dynamic wb in MSExcelWorkbookRunningInstances.Enum())
+                {
+                    TreeViewItem node = new TreeViewItem { Header = wb.Name };
+                    foreach (Microsoft.Office.Interop.Excel.Worksheet ws in wb.Worksheets)
+                    {
+                        node.Items.Add(ws.Name);
+                        counter++;
+                    }
+                    TreeView_OpenSheets.Items.Add(node);
+                }
+                */
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                // _initializationErrors.Add(ex.ToString());
+                //TreeView_OpenSheets.Items.Clear();
+            }
         }
 
         private void PopulateImportProfilesComboBox()
         {
             ComboBox_ImportProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
+        }
+
+
+        private void PopulateMappingProfilesImportViewComboBox()
+        {
+            ComboBox_MappingProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
+        }
+
+        private void SetupExportColumnMappingsEditColumns()
+        {
+            DataGrid_ExportColumnMappingsEdit.Columns.Clear();
+            DataGrid_ExportColumnMappingsEdit.Columns.Add(new DataGridTextColumn { 
+                Header = "Alias", 
+                Binding = new Binding("ImportColumnMappingAlias"), 
+                IsReadOnly = true
+            });
+            
+            var excelColumnAliasComboBoxTemplate = new FrameworkElementFactory(typeof(ComboBox));
+            excelColumnAliasComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, ExcelAppHelperService.GetExcelColumnOptionsAsList(true));
+            excelColumnAliasComboBoxTemplate.SetBinding(ComboBox.SelectedItemProperty, new Binding("ExcelColumnAlias"));
+            excelColumnAliasComboBoxTemplate.AddHandler(
+                ComboBox.SelectionChangedEvent,
+                new SelectionChangedEventHandler((o, e) => {
+                    if (DataGrid_ExportColumnMappingsEdit.SelectedItem is not null)
+                    {
+                        ((ExportColumnMappingListItem)DataGrid_ExportColumnMappingsEdit.SelectedItem).ExcelColumnAlias = e.AddedItems[0].ToString();
+                        ExportColumnMappingRepository.UpdateColumnMapping(_connectionManager, ColumnMappingService.ConvertFromListItem((ExportColumnMappingListItem)DataGrid_ExportColumnMappingsEdit.SelectedItem));
+                    }
+                })
+            );
+            DataGrid_ExportColumnMappingsEdit.Columns.Add(
+                new DataGridTemplateColumn()
+                {
+                    Header = "Map to Excel Column",
+                    CellTemplate = new DataTemplate() { VisualTree = excelColumnAliasComboBoxTemplate },
+                }
+            );
         }
 
         private void SetupImportColumnMappingsViewColumns()
@@ -68,9 +125,8 @@ namespace qaImageViewer
         private void SetupImportColumnMappingsEditColumns()
         {
             DataGrid_ImportColumnMappingsEdit.Columns.Clear();
-            DataGrid_ImportColumnMappingsEdit.Columns.Add(new DataGridCheckBoxColumn { Header = "Changed", Binding = new Binding("Changed"), IsReadOnly = true, });
 
-            DataGrid_ImportColumnMappingsEdit.Columns.Add(new DataGridTextColumn { Header = "Alias", Binding = new Binding("ColumnAlias") });
+            DataGrid_ImportColumnMappingsEdit.Columns.Add(new DataGridTextColumn { Header = "Alias", Binding = new Binding("ColumnAlias"), });
             // Add Column Type ComboBox
             var columnTypeComboBoxTemplate = new FrameworkElementFactory(typeof(ComboBox));
             columnTypeComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, Enum.GetValues(typeof(DBColumnType)));
@@ -81,7 +137,7 @@ namespace qaImageViewer
                     if (DataGrid_ImportColumnMappingsEdit.SelectedItem is not null)
                     {
                         DBColumnType columnType = Enum.IsDefined(typeof(DBColumnType), e.AddedItems[0]) ? (DBColumnType)e.AddedItems[0] : DBColumnType.TEXT;
-                        ((ColumnMapping)DataGrid_ImportColumnMappingsEdit.SelectedItem).ColumnType = columnType;
+                        ((ImportColumnMappingListItem)DataGrid_ImportColumnMappingsEdit.SelectedItem).ColumnType = columnType;
                     }
                 })
             );
@@ -89,7 +145,7 @@ namespace qaImageViewer
                 new DataGridTemplateColumn()
                 {
                     Header = "Type",
-                    CellTemplate = new DataTemplate() { VisualTree = columnTypeComboBoxTemplate }
+                    CellTemplate = new DataTemplate() { VisualTree = columnTypeComboBoxTemplate },
                 }
             );
 
@@ -102,7 +158,7 @@ namespace qaImageViewer
                 new SelectionChangedEventHandler((o, e) => {
                     if (DataGrid_ImportColumnMappingsEdit.SelectedItem is not null)
                     {
-                        ((ColumnMapping)DataGrid_ImportColumnMappingsEdit.SelectedItem).ExcelColumnAlias = e.AddedItems[0].ToString();
+                        ((ImportColumnMappingListItem)DataGrid_ImportColumnMappingsEdit.SelectedItem).ExcelColumnAlias = e.AddedItems[0].ToString();
                     }
                 })
             );
@@ -110,25 +166,33 @@ namespace qaImageViewer
                 new DataGridTemplateColumn()
                 {
                     Header = "Map to Excel Column",
-                    CellTemplate = new DataTemplate() { VisualTree = excelColumnAliasComboBoxTemplate }
+                    CellTemplate = new DataTemplate() { VisualTree = excelColumnAliasComboBoxTemplate },
                 }
             );
 
             // Add Save Button 
             var saveButtonTemplate = new FrameworkElementFactory(typeof(Button));
             saveButtonTemplate.SetValue(Button.ContentProperty, "Save");
+            saveButtonTemplate.SetBinding(Button.VisibilityProperty, new Binding
+            {
+                Path = new PropertyPath("Changed"),
+                Converter = new BooleanToVisibilityConverter()
+            });
+
             saveButtonTemplate.AddHandler(
                 Button.ClickEvent,
                 new RoutedEventHandler((o, e) => {
-                    ColumnMappingRepository.UpdateColumnMapping(_connectionManager, (ColumnMapping)DataGrid_ImportColumnMappingsEdit.SelectedItem);
-                    //PopulateImportColumnMappingsEditViewDataGrid((MappingProfile)ComboBox_ImportProfilesSelector.SelectedItem);
+                    ((ImportColumnMappingListItem)DataGrid_ImportColumnMappingsEdit.SelectedItem).Changed = false;
+                    ImportColumnMappingRepository.UpdateColumnMapping(_connectionManager, 
+                        ColumnMappingService.ConvertFromListItem((ImportColumnMappingListItem)DataGrid_ImportColumnMappingsEdit.SelectedItem));
+                    PopulateExportColumnMappingsEditDataGrid((MappingProfile)ComboBox_ImportProfilesSelector.SelectedItem);
                 })
             );
             DataGrid_ImportColumnMappingsEdit.Columns.Add(
                 new DataGridTemplateColumn()
                 {
                     Header = "",
-                    CellTemplate = new DataTemplate() { VisualTree = saveButtonTemplate }
+                    CellTemplate = new DataTemplate() { VisualTree = saveButtonTemplate },
                 }
             );
 
@@ -138,36 +202,32 @@ namespace qaImageViewer
             deleteButtonTemplate.AddHandler(
                 Button.ClickEvent,
                 new RoutedEventHandler((o, e) => {
-                    ColumnMappingRepository.DeleteColumnMapping(_connectionManager, (ColumnMapping)DataGrid_ImportColumnMappingsEdit.SelectedItem);
-                    PopulateImportColumnMappingsEditViewDataGrid((MappingProfile)ComboBox_ImportProfilesSelector.SelectedItem);
+                    ImportColumnMappingRepository.DeleteColumnMapping(_connectionManager, 
+                        ColumnMappingService.ConvertFromListItem((ImportColumnMappingListItem)DataGrid_ImportColumnMappingsEdit.SelectedItem));
+                    MappingProfile profile = (MappingProfile)ComboBox_ImportProfilesSelector.SelectedItem;
+                    PopulateImportColumnMappingsEditViewDataGrid(profile);
+                    PopulateExportColumnMappingsEditDataGrid(profile);
+
                 })
             );
             DataGrid_ImportColumnMappingsEdit.Columns.Add(
                 new DataGridTemplateColumn()
                 {
                     Header = "",
-                    CellTemplate = new DataTemplate() { VisualTree = deleteButtonTemplate }
+                    CellTemplate = new DataTemplate() { VisualTree = deleteButtonTemplate },
                 }
             );
-
-
         }
 
         private void Button_SaveImportProfile_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                MappingProfile profile = (MappingProfile)ComboBox_ImportProfilesSelector.SelectedItem;
-                if (profile is null)
-                {
-                    MappingProfile newProfile;
-                    profile = new MappingProfile { Name = ComboBox_ImportProfilesSelector.Text, Locked = false };
-                    MappingProfileRepository.InsertMappingProfile(_connectionManager, profile, out newProfile);
-                    PopulateImportProfilesComboBox();
-                    ComboBox_ImportProfilesSelector.Text = "<profile name>";
-                } 
-                
-                
+                MappingProfile profile = new MappingProfile { Name = ComboBox_ImportProfilesSelector.Text, Locked = false };
+                MappingProfileRepository.InsertMappingProfile(_connectionManager, profile, out _);
+                PopulateImportProfilesComboBox();
+                ComboBox_ImportProfilesSelector.Text = "--Select Profile--";
+                Button_SaveImportProfile.IsEnabled = false;
             } catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Error creating profile");
@@ -187,29 +247,50 @@ namespace qaImageViewer
                 else
                 {
                     PopulateImportColumnMappingsEditViewDataGrid(profile);
+                    PopulateExportColumnMappingsEditDataGrid(profile);
                 }
             }
         }
 
+        private void PopulateExportColumnMappingsEditDataGrid(MappingProfile profile)
+        {
+            try
+            {
+                if (profile is not null)
+                {
+                    DataGrid_ExportColumnMappingsEdit.ItemsSource = ExportColumnMappingRepository.GetColumnMappingListItemsByProfileId(_connectionManager, profile.Id);
+                }
+                else
+                {
+                    MessageBox.Show("Could not retrieve full export mapping profile. Please try a different one", "Oops");
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Could not retrieve export mapping profile. Please try a different one", "Error!");
+                return;
+            }
+        }
 
         private void PopulateImportColumnMappingsEditViewDataGrid(MappingProfile profile)
         {
             try
             {
                 MappingProfile fullProfile = MappingProfileRepository.GetFullMappingProfileById(_connectionManager, profile.Id);
-                if (fullProfile is not null && fullProfile.ImportMapping is not null)
+                if (fullProfile is not null)
                 {
                     if (fullProfile.Locked)
                     {
                         // If it is locked, just view
-                        DataGrid_ImportColumnMappingsView.ItemsSource = fullProfile.ImportMapping.ColumnMappings;
+                        DataGrid_ImportColumnMappingsView.ItemsSource = fullProfile.ImportColumnMappings;
                         DataGrid_ImportColumnMappingsEdit.Visibility = Visibility.Hidden;
                         DataGrid_ImportColumnMappingsView.Visibility = Visibility.Visible;
                     }
                     else
                     {
                         // If it's not locked we can edit
-                        DataGrid_ImportColumnMappingsEdit.ItemsSource = fullProfile.ImportMapping.ColumnMappings;
+                        DataGrid_ImportColumnMappingsEdit.ItemsSource = fullProfile.ImportColumnMappings;
                         DataGrid_ImportColumnMappingsView.Visibility = Visibility.Hidden;
                         DataGrid_ImportColumnMappingsEdit.Visibility = Visibility.Visible;
                     }
@@ -247,7 +328,7 @@ namespace qaImageViewer
                 profile = MappingProfileRepository.GetFullMappingProfileById(_connectionManager, profile.Id);
                 if (profile is not null)
                 {
-                    ColumnMapping newMapping = new ColumnMapping
+                    ImportColumnMapping newImportMapping = new ImportColumnMapping
                     {
                         ColumnAlias = "alias",
                         ColumnType = DBColumnType.TEXT,
@@ -256,10 +337,124 @@ namespace qaImageViewer
                         ColumnName = MappingProfileHelperService.GetNextColumnName(profile)
                     };
 
-                    ColumnMappingRepository.InsertColumnMapping(_connectionManager, newMapping);
+                    int id = ImportColumnMappingRepository.InsertColumnMapping(_connectionManager, newImportMapping);
+
                     PopulateImportColumnMappingsEditViewDataGrid(profile);
+
+                    ExportColumnMapping newExportMapping = new ExportColumnMapping
+                    {
+                        ImportColumnMappingId = id,
+                        ExcelColumnAlias = "IGNORE",
+                        ProfileId = profile.Id
+                    };
+
+                    ExportColumnMappingRepository.InsertColumnMapping(_connectionManager, newExportMapping);
+                    PopulateExportColumnMappingsEditDataGrid(profile);
                 }
             }
         }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                TabItem tab = e.AddedItems[0] as TabItem;
+                if (tab is not null && tab.Header.ToString() == "Import")
+                {
+                    PopulateMappingProfilesImportViewComboBox();
+                }
+            }
+           
+        }
+
+        private void Button_SelectExcelTargetFile_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog fileDialog = new Microsoft.Win32.OpenFileDialog();
+            fileDialog.DefaultExt = ".xls|.xlsx";
+            fileDialog.Filter = "(.xls)|*.xls|(.xlsx)|*.xlsx";
+            Nullable<bool> isFileChosen = fileDialog.ShowDialog();
+            if (isFileChosen == true)
+            {
+
+                LoadExcelPreview(fileDialog.FileName);
+
+            }
+        }
+
+        private void LoadExcelPreview(string filename)
+        {
+            DataGrid_ExcelPreview.Visibility = Visibility.Hidden;
+            Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
+            ProgressBar_LoadingExcelPreview.Visibility = Visibility.Visible;
+            Label_LoadingExcelPreview.Visibility = Visibility.Visible;
+            ListBox_ExcelPreviewSheets.Items.Clear();
+
+            try
+            {
+                int maxPreviewRows = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Row.Count", 5);
+                int maxPreviewColumns = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Column.Count", 5);
+
+                Excel.Application xlApp = new Excel.Application();
+                Excel.Workbook workbook = xlApp.Workbooks.Open(filename);
+
+                foreach (Excel.Worksheet worksheet in workbook.Worksheets)
+                {
+                    ListBox_ExcelPreviewSheets.Items.Add(new ExcelWorksheetListItem
+                    {
+                        Name = worksheet.Name,
+                        SheetData = ExcelAppHelperService.GetSheetData(worksheet, maxPreviewRows, maxPreviewColumns)
+                    });
+                }
+
+                workbook.Close();
+
+            } catch (Exception ex)
+            {
+                Label_UnableToLoadExcelPreview.Visibility = Visibility.Visible;
+                LoggerService.LogError(ex.ToString());
+                MessageBox.Show("Unable to load preview.", "Error");
+            }
+        }
+
+
+
+        private void ListBox_ExcelPreviewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
+
+            ExcelWorksheetListItem item = (ExcelWorksheetListItem)ListBox_ExcelPreviewSheets.SelectedItem;
+            if (item is not null && item.SheetData.Count > 0 && item.SheetData[0].Count > 0)
+            {
+                DataGrid_ExcelPreview.Columns.Clear();
+                DataGrid_ExcelPreview.Items.Clear();
+                int columnCount = item.SheetData[0].Count;
+                for (int i = 0; i < columnCount; i++)
+                {
+                    DataGrid_ExcelPreview.Columns.Add(new DataGridTextColumn { 
+                         Binding = new Binding
+                         {
+                             Path = new PropertyPath(""),
+                             Converter = new RowIndexConverter(),
+                             ConverterParameter = i,
+                         }
+                    });
+                }
+
+             
+
+                for (int i = 0; i< item.SheetData.Count; i++)
+                {
+                    DataGrid_ExcelPreview.Items.Add(item.SheetData[i]);
+                   // MessageBox.Show(string.Join(',', item.SheetData[i]));
+                }
+
+                DataGrid_ExcelPreview.Visibility = Visibility.Visible;
+            } else
+            {
+                Label_UnableToLoadExcelPreview.Visibility = Visibility.Visible;
+
+            }
+        }
+
     }
 }

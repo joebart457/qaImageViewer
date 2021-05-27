@@ -85,10 +85,9 @@ namespace qaImageViewer.Repository
                     throw new Exception($"unable to find mapping profile with id {id}");
                 }
 
-                profile.ImportMapping = new ImportTableMapping { 
-                    ProfileId = id, 
-                    ColumnMappings = ColumnMappingRepository.GetColumnMappingsByProfileId(cm, id) 
-                };
+                profile.ImportColumnMappings = ImportColumnMappingRepository.GetColumnMappingListItemsByProfileId(cm, id);
+                profile.ExportColumnMappings = ExportColumnMappingRepository.GetColumnMappingListItemsByProfileId(cm, id);
+
                 return profile;
             }
             catch (Exception ex)

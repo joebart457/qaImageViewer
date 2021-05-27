@@ -104,8 +104,8 @@ namespace qaImageViewer
 
                 createMappingProfileTblCmd.ExecuteNonQuery();
 
-                var createColumnMappingTblCmd = _sqlConn.CreateCommand();
-                createMappingProfileTblCmd.CommandText = @"CREATE TABLE column_mapping (
+                var createImportColumnMappingTblCmd = _sqlConn.CreateCommand();
+                createImportColumnMappingTblCmd.CommandText = @"CREATE TABLE import_column_mapping (
                 	id	INTEGER NOT NULL,
                 	column_alias	TEXT,
                     column_name TEXT,
@@ -115,7 +115,20 @@ namespace qaImageViewer
                 	PRIMARY KEY(id AUTOINCREMENT)
                 );";
 
-                createMappingProfileTblCmd.ExecuteNonQuery();
+                createImportColumnMappingTblCmd.ExecuteNonQuery();
+
+
+                var createExportColumnMappingTblCmd = _sqlConn.CreateCommand();
+                createExportColumnMappingTblCmd.CommandText = @"CREATE TABLE export_column_mapping (
+                	id	INTEGER NOT NULL,
+                    profile_id INTEGER NOT NULL,
+                	import_column_mapping_id	INTEGER NOT NULL,
+                    excel_column_alias TEXT,
+                	PRIMARY KEY(id AUTOINCREMENT),
+                    FOREIGN KEY('import_column_mapping_id') REFERENCES import_column_mapping(id) ON DELETE CASCADE
+                ); ";
+
+                createExportColumnMappingTblCmd.ExecuteNonQuery();
 
                 var createAttributeTblCmd = _sqlConn.CreateCommand();
                 createAttributeTblCmd.CommandText = @"CREATE TABLE attribute (
