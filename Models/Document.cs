@@ -17,6 +17,6 @@ namespace qaImageViewer.Models
         public int Id { get; set; }
 
         public string ResultTableName { get; set; }
-        public List<DocumentColumn> Columns { get; set; }
+        public List<DocumentColumn> Columns { get; set; } = new List<DocumentColumn>();
     }
 }

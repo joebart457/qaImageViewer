@@ -9,9 +9,9 @@ namespace qaImageViewer.Service
     static class ValidatorService
     {
 
-        public static bool ValidateSingleColumn(string text)
+        public static bool ValidateSingleColumn(string text, int maxColumnAliasLength = 3)
         {
-            if (text.Length > 2 || text.Length == 0) return false;
+            if (text.Length > maxColumnAliasLength || text.Length == 0) return false;
             foreach (Char c in text)
             {
                 if (!Char.IsLetter(c)) { return false; }

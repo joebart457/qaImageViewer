@@ -19,7 +19,7 @@ using qaImageViewer.Converters;
 using qaImageViewer.Models;
 using qaImageViewer.Repository;
 using qaImageViewer.Service;
-
+using qaImageViewer.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace qaImageViewer
@@ -38,6 +38,7 @@ namespace qaImageViewer
             SetupImportColumnMappingsViewColumns();
             SetupImportColumnMappingsEditColumns();
             SetupExportColumnMappingsEditColumns();
+            SetupPreviousImportResultsDataGrid();
             PopulateImportProfilesComboBox();
             HideExcelPreviewStatusLabels();
             ResetExcelPreviewData();
@@ -50,10 +51,40 @@ namespace qaImageViewer
             ComboBox_ImportProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
         }
 
-
+        private void PopulatePreviousImportResultsDataGrid()
+        {
+            DataGrid_PreviousImportResults.ItemsSource = ImportResultRepository.GetImportResultListItems(_connectionManager);
+        }
         private void PopulateMappingProfilesImportViewComboBox()
         {
             ComboBox_MappingProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
+        }
+
+        private void SetupPreviousImportResultsDataGrid()
+        {
+            DataGrid_PreviousImportResults.Columns.Clear();
+            DataGrid_PreviousImportResults.Columns.Add(new DataGridTextColumn { 
+                Header = "Profile", 
+                Binding = new Binding("ProfileName")
+            });
+
+            DataGrid_PreviousImportResults.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Workbook",
+                Binding = new Binding("WorkbookName")
+            });
+
+            DataGrid_PreviousImportResults.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Worksheet",
+                Binding = new Binding("WorksheetName")
+            });
+
+            DataGrid_PreviousImportResults.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Date",
+                Binding = new Binding("EndTime")
+            }); 
         }
 
         private void SetupExportColumnMappingsEditColumns()
@@ -333,9 +364,14 @@ namespace qaImageViewer
             if (e.AddedItems.Count > 0)
             {
                 TabItem tab = e.AddedItems[0] as TabItem;
-                if (tab is not null && tab.Header.ToString() == "Import")
+                if (tab is not null)
                 {
-                    PopulateMappingProfilesImportViewComboBox();
+                    if (tab.Header.ToString() == "Import")
+                    {
+                        PopulateMappingProfilesImportViewComboBox();
+                        PopulatePreviousImportResultsDataGrid();
+                    }
+                    
                 }
             }
            
@@ -357,7 +393,6 @@ namespace qaImageViewer
 
         private void HideExcelPreviewStatusLabels()
         {
-            DataGrid_ExcelPreview.Visibility = Visibility.Hidden;
             Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
             ProgressBar_LoadingExcelPreview.Visibility = Visibility.Hidden;
             Label_LoadingExcelPreview.Visibility = Visibility.Hidden;
@@ -367,7 +402,6 @@ namespace qaImageViewer
         private void ResetExcelPreviewData()
         {
             ListBox_ExcelPreviewSheets.Items.Clear();
-            DataGrid_ExcelPreview.Visibility = Visibility.Hidden;
             DataGrid_ExcelPreview.Items.Clear();
             DataGrid_ExcelPreview.Columns.Clear();
         }
@@ -391,27 +425,40 @@ namespace qaImageViewer
             HideExcelPreviewStatusLabels();
             try
             {
-                ResetExcelPreviewData();
-                HideExcelPreviewStatusLabels();
+               
                 ProgressBar_LoadingExcelPreview.Value = 0;
                 ShowExcelPreviewInProgess();
                 IProgress<int> progress = new Progress<int>(value => {
                     ProgressBar_LoadingExcelPreview.Value = value;
                 });
 
+                ProgressBar_LoadingExcelPreview.IsIndeterminate = true;
+               
                 int maxPreviewRows = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Row.Count", 5);
                 int maxPreviewColumns = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Column.Count", 5);
 
-                Excel.Application xlApp = new Excel.Application();
-                Excel.Workbook workbook = xlApp.Workbooks.Open(filename);
-               
+
+                Excel.Workbook workbook = await Task.Run(() => { 
+                    Excel.Application xlApp = new Excel.Application(); 
+                    return xlApp.Workbooks.Open(filename); 
+                });
+
+                Label_ExcelWorkbookName.Content = filename;
+
+                ProgressBar_LoadingExcelPreview.IsIndeterminate = false;
+
                 ProgressBar_LoadingExcelPreview.Maximum = maxPreviewRows * maxPreviewColumns * workbook.Worksheets.Count;
-                foreach (Excel.Worksheet worksheet in workbook.Worksheets)
+
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
                 {
                     ListBox_ExcelPreviewSheets.Items.Add(new ExcelWorksheetListItem
                     {
-                        Name = worksheet.Name,
-                        SheetData = await Task.Run(() => ExcelAppHelperService.GetSheetData(progress, worksheet, maxPreviewRows, maxPreviewColumns))
+                        
+                        Name = ((Excel.Worksheet)workbook.Worksheets[i]).Name,
+                        UsedRowCount = ((Excel.Worksheet)workbook.Worksheets[i]).UsedRange.Rows.Count,
+                        WorkbookPath = filename,
+                        SheetIndex = i,
+                        SheetData = await Task.Run(() => ExcelAppHelperService.GetSheetData(progress, (Excel.Worksheet)workbook.Worksheets[i], maxPreviewRows, maxPreviewColumns))
                     });
                 }
                 ProgressBar_LoadingExcelPreview.Value = ProgressBar_LoadingExcelPreview.Maximum;
@@ -463,8 +510,6 @@ namespace qaImageViewer
                     ProgressBar_LoadingExcelPreview.Value++;
                 }
                 HideExcelPreviewStatusLabels();
-
-                DataGrid_ExcelPreview.Visibility = Visibility.Visible;
             } else
             {
                 Label_UnableToLoadExcelPreview.Visibility = Visibility.Visible;
@@ -472,5 +517,38 @@ namespace qaImageViewer
             }
         }
 
+        private async void Button_RunExcelImport_Click(object sender, RoutedEventArgs e)
+        {
+            ExcelWorksheetListItem ws = (ExcelWorksheetListItem)ListBox_ExcelPreviewSheets.SelectedItem;
+            if (ws is null)
+            {
+                MessageBox.Show("Unable to import. Please select target sheet.");
+                return;
+            }
+
+            MappingProfile profile = (MappingProfile)ComboBox_MappingProfilesSelector.SelectedItem;
+            if (profile is null)
+            {
+                MessageBox.Show("Unable to import. Please select mapping profile.");
+                return;
+            }
+
+            int batchSize = ConfigRepository.GetIntegerOption(_connectionManager, "Tasks.Excel.Import.BatchSize", 10);
+
+            ExcelImportItemsTask excelImportItemsTask = new ExcelImportItemsTask(
+                _connectionManager, 
+                ws.WorkbookPath,
+                ws.SheetIndex,
+                profile.Id, 
+                batchSize);
+
+            ProgressBar_ExcelImportItemsTask.Value = 0;
+            ProgressBar_ExcelImportItemsTask.Maximum = ws.UsedRowCount;
+            IProgress<int> progress = new Progress<int>(value => {
+                ProgressBar_ExcelImportItemsTask.Value = value;
+            });
+
+            await Task.Run(() => { excelImportItemsTask.Execute(progress, () => { }); });
+        }
     }
 }

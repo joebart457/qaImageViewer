@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace qaImageViewer.Models
 {
-    class ImportResults
+    class ImportResultsListItem
     {
         public int Id { get; set; }
         public int ProfileId { get; set; }
+        public string ProfileName { get; set; }
         public string ResultTableName { get; set; }
         public string WorkbookName { get; set; }
         public string WorksheetName { get; set; }

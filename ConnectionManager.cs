@@ -130,6 +130,31 @@ namespace qaImageViewer
 
                 createExportColumnMappingTblCmd.ExecuteNonQuery();
 
+                var createProcessingExceptionTblCmd = _sqlConn.CreateCommand();
+                createProcessingExceptionTblCmd.CommandText = @"CREATE TABLE processing_exception (
+                	id	INTEGER NOT NULL,
+                    result_set_id INTEGER NOT NULL,
+                    row_index INTEGER,
+                	error_trace	TEXT,
+                    error_time INTEGER NOT NULL,
+                	PRIMARY KEY(id AUTOINCREMENT)
+                ); ";
+
+                createProcessingExceptionTblCmd.ExecuteNonQuery();
+
+                var createImportResultTblCmd = _sqlConn.CreateCommand();
+                createImportResultTblCmd.CommandText = @"CREATE TABLE import_result (
+                	id	INTEGER NOT NULL,
+                    profile_id INTEGER NOT NULL,
+                	table_name	TEXT NOT NULL,
+                    workbook_name TEXT NOT NULL,
+                    worksheet_name TEXT NOT NULL,
+                    end_time INTEGER NOT NULL,
+                	PRIMARY KEY(id AUTOINCREMENT)
+                ); ";
+
+                createImportResultTblCmd.ExecuteNonQuery();
+
                 var createAttributeTblCmd = _sqlConn.CreateCommand();
                 createAttributeTblCmd.CommandText = @"CREATE TABLE attribute (
                 	id	INTEGER NOT NULL,

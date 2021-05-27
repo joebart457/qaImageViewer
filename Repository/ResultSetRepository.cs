@@ -13,7 +13,7 @@ namespace qaImageViewer.Repository
     {
         private static string GetNextResultTableName(ConnectionManager cm)
         {
-
+            // Needs refactor
             Utilities.CheckNull(cm);
             var conn = cm.GetSQLConnection();
             var getSeqCmd = conn.CreateCommand();
@@ -21,9 +21,6 @@ namespace qaImageViewer.Repository
 
             getSeqCmd.CommandText = @"select seq from sqlite_sequence where name = 'import_result'";
             var result = getSeqCmd.ExecuteScalar();
-            if (result is null) {
-                throw new Exception("Error getting next sequence");
-            }
             return $"result_set_{Convert.ToInt32(result) + 1}";
         }
 
@@ -46,17 +43,17 @@ namespace qaImageViewer.Repository
             }
         }
 
-        private static string CreateColumnDefinitions(List<ImportColumnMapping> mappings)
+        private static string CreateColumnDefinitions(List<ImportColumnMappingListItem> mappings)
         {
             string result = "";
-            foreach(ImportColumnMapping map in mappings)
+            foreach(ImportColumnMappingListItem map in mappings)
             {
                 result += $"{map.ColumnName} {GetTypeString(map.ColumnType)}, ";
             }
             return result;
         }
 
-        public static string CreateResultSet(ConnectionManager cm, ImportTableMapping mapping)
+        public static int CreateResultSet(ConnectionManager cm, MappingProfile mapping, string workbookName, string worksheetName)
         {
             try
             { 
@@ -65,19 +62,30 @@ namespace qaImageViewer.Repository
                 var createResultSetCmd = conn.CreateCommand();
 
                 string nextResultTableName = GetNextResultTableName(cm);
-                
+
+                // needs refactor
+                ImportResultRepository.InsertImportResult(cm, new ImportResults
+                {
+                    ResultTableName = nextResultTableName,
+                    ProfileId = mapping.Id,
+                    WorkbookName = workbookName,
+                    WorksheetName = worksheetName
+                });
+
+
                 createResultSetCmd.CommandText = $"CREATE TABLE {nextResultTableName}" 
                     + "(id	INTEGER NOT NULL,"
-                	+ CreateColumnDefinitions(mapping.ColumnMappings)
+                	+ CreateColumnDefinitions(mapping.ImportColumnMappings)
                 	+ "PRIMARY KEY(id AUTOINCREMENT));";
                 createResultSetCmd.ExecuteNonQuery();
+                int resultSetId = Convert.ToInt32(conn.LastInsertRowId);
 
                 // Lock mapping profile so more columns cannot be added
-                MappingProfile mappingProfile = MappingProfileRepository.GetMappingProfileById(cm, mapping.ProfileId);
+                MappingProfile mappingProfile = MappingProfileRepository.GetMappingProfileById(cm, mapping.Id);
                 mappingProfile.Locked = true;
                 MappingProfileRepository.UpdateMappingProfile(cm, mappingProfile);
 
-                return nextResultTableName;
+                return resultSetId;
 
             } catch (Exception ex)
             {
@@ -97,6 +105,72 @@ namespace qaImageViewer.Repository
                     return $"\'{value.ToString()}'";
                 default:
                     return $"\'{value.ToString()}'";
+            }
+        }
+
+        public static void InsertIntoResultSet(ConnectionManager cm, int importResultId, List<Document> documents)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+
+                var conn = cm.GetSQLConnection();
+
+
+                ImportResults res = ImportResultRepository.GetImportResult(cm, importResultId);
+                if (res is null)
+                {
+                    throw new Exception($"unable to find result set with id {importResultId}");
+                }
+
+                string resultTableName = res.ResultTableName;
+
+                MappingProfile profile = MappingProfileRepository.GetFullMappingProfileById(cm, res.ProfileId);
+
+
+                var insertIntoResultSetCmd = conn.CreateCommand();
+
+                // Build query 
+                string columnsToSelect = ""; // Don't want id here because it is autoincrement anyway
+                string columnValuesToInsert = "";
+
+                if (profile is not null)
+                {
+                    foreach (ImportColumnMappingListItem mapping in profile.ImportColumnMappings)
+                    {
+                        columnsToSelect += columnsToSelect.Length > 0? $", {mapping.ColumnName}" : mapping.ColumnName;
+                    }
+
+                    for (int i = 0; i < documents.Count; i++)
+                    {
+                        string columnValuesToInsertForRow = "";
+                        foreach (ImportColumnMappingListItem mapping in profile.ImportColumnMappings)
+                        {
+                            DocumentColumn column = documents[i].Columns.Find(d => d.Mapping.Id == mapping.Id); // for now just try to match on id
+                            object parameterValue = column is null ? null : column.Value;
+                            string parameterName = $"@{mapping.ColumnName + i.ToString()}";
+                            columnValuesToInsertForRow += columnValuesToInsertForRow.Length > 0 ? $", {parameterName}" : parameterName;
+                            insertIntoResultSetCmd.Parameters.Add(new SQLiteParameter(parameterName, parameterValue));
+                        }
+                        columnValuesToInsert += columnValuesToInsert.Length == 0 ? $"({columnValuesToInsertForRow})" : $", ({columnValuesToInsertForRow})";
+                    }
+                }
+                else
+                {
+                    throw new Exception("expected profile to have valid import_mapping");
+                }
+
+                
+                insertIntoResultSetCmd.CommandText = $"INSERT INTO {resultTableName} ({columnsToSelect}) VALUES {columnValuesToInsert}";
+                LoggerService.LogError($"INSERT INTO {resultTableName} ({columnsToSelect}) VALUES {columnValuesToInsert}");
+
+                insertIntoResultSetCmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
             }
         }
 
@@ -124,14 +198,14 @@ namespace qaImageViewer.Repository
                 var insertIntoResultSetCmd = conn.CreateCommand();
 
                 // Build query 
-                string columnsToSelect = "id";
+                string columnsToSelect = ""; // No id on insert because it is autoincrement
                 string columnValuesToInsert = "";
 
                 if (profile is not null)
                 {
                     foreach (ImportColumnMappingListItem mapping in profile.ImportColumnMappings)
                     {
-                        columnsToSelect += $", {mapping.ColumnName}";
+                        columnsToSelect += columnsToSelect.Length > 0 ? $", {mapping.ColumnName}" : mapping.ColumnName;
                         DocumentColumn column = document.Columns.Find(d => d.Mapping.Id == mapping.Id); // for now just try to match on id
                         object parameterValue = column is null ? null : column.Value;
                         string parameterName = mapping.ColumnName;
