@@ -39,37 +39,11 @@ namespace qaImageViewer
             SetupImportColumnMappingsEditColumns();
             SetupExportColumnMappingsEditColumns();
             PopulateImportProfilesComboBox();
+            HideExcelPreviewStatusLabels();
+            ResetExcelPreviewData();
+            
         }
 
-        private void PopulateOpenSheetsTreeview()
-        {
-            try
-            {
-               Excel.Application oExcelApp = (Excel.Application)System.Runtime.InteropServices.Marshal.BindToMoniker("C:\\Users\\system.developer\\Desktop\\archive\\PCS Shop Sworn Construction Statement.xlsx");
-                MessageBox.Show(oExcelApp.ActiveWorkbook.Name);
-
-                /*
-                TreeView_OpenSheets.Items.Clear();
-                uint counter = 0;
-                foreach (dynamic wb in MSExcelWorkbookRunningInstances.Enum())
-                {
-                    TreeViewItem node = new TreeViewItem { Header = wb.Name };
-                    foreach (Microsoft.Office.Interop.Excel.Worksheet ws in wb.Worksheets)
-                    {
-                        node.Items.Add(ws.Name);
-                        counter++;
-                    }
-                    TreeView_OpenSheets.Items.Add(node);
-                }
-                */
-            }
-            catch (Exception ex)
-            {
-                LoggerService.LogError(ex.ToString());
-                // _initializationErrors.Add(ex.ToString());
-                //TreeView_OpenSheets.Items.Clear();
-            }
-        }
 
         private void PopulateImportProfilesComboBox()
         {
@@ -381,31 +355,67 @@ namespace qaImageViewer
             }
         }
 
-        private void LoadExcelPreview(string filename)
+        private void HideExcelPreviewStatusLabels()
         {
             DataGrid_ExcelPreview.Visibility = Visibility.Hidden;
             Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
-            ProgressBar_LoadingExcelPreview.Visibility = Visibility.Visible;
-            Label_LoadingExcelPreview.Visibility = Visibility.Visible;
-            ListBox_ExcelPreviewSheets.Items.Clear();
+            ProgressBar_LoadingExcelPreview.Visibility = Visibility.Hidden;
+            Label_LoadingExcelPreview.Visibility = Visibility.Hidden;
+            Label_ExcelPreviewDataLoaded.Visibility = Visibility.Hidden;
+        }
 
+        private void ResetExcelPreviewData()
+        {
+            ListBox_ExcelPreviewSheets.Items.Clear();
+            DataGrid_ExcelPreview.Visibility = Visibility.Hidden;
+            DataGrid_ExcelPreview.Items.Clear();
+            DataGrid_ExcelPreview.Columns.Clear();
+        }
+
+        private void ShowExcelPreviewInProgess()
+        {
+            Label_LoadingExcelPreview.Visibility = Visibility.Visible;
+            ProgressBar_LoadingExcelPreview.Visibility = Visibility.Visible;
+        }
+
+        private void ShowDataLoadedSuccessfully()
+        {
+            HideExcelPreviewStatusLabels();
+            Label_ExcelPreviewDataLoaded.Visibility = Visibility.Visible;
+        }
+
+
+        private async void LoadExcelPreview(string filename)
+        {
+            ResetExcelPreviewData();
+            HideExcelPreviewStatusLabels();
             try
             {
+                ResetExcelPreviewData();
+                HideExcelPreviewStatusLabels();
+                ProgressBar_LoadingExcelPreview.Value = 0;
+                ShowExcelPreviewInProgess();
+                IProgress<int> progress = new Progress<int>(value => {
+                    ProgressBar_LoadingExcelPreview.Value = value;
+                });
+
                 int maxPreviewRows = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Row.Count", 5);
                 int maxPreviewColumns = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Column.Count", 5);
 
                 Excel.Application xlApp = new Excel.Application();
                 Excel.Workbook workbook = xlApp.Workbooks.Open(filename);
-
+               
+                ProgressBar_LoadingExcelPreview.Maximum = maxPreviewRows * maxPreviewColumns * workbook.Worksheets.Count;
                 foreach (Excel.Worksheet worksheet in workbook.Worksheets)
                 {
                     ListBox_ExcelPreviewSheets.Items.Add(new ExcelWorksheetListItem
                     {
                         Name = worksheet.Name,
-                        SheetData = ExcelAppHelperService.GetSheetData(worksheet, maxPreviewRows, maxPreviewColumns)
+                        SheetData = await Task.Run(() => ExcelAppHelperService.GetSheetData(progress, worksheet, maxPreviewRows, maxPreviewColumns))
                     });
                 }
-
+                ProgressBar_LoadingExcelPreview.Value = ProgressBar_LoadingExcelPreview.Maximum;
+                ShowDataLoadedSuccessfully();
                 workbook.Close();
 
             } catch (Exception ex)
@@ -420,13 +430,17 @@ namespace qaImageViewer
 
         private void ListBox_ExcelPreviewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
-
             ExcelWorksheetListItem item = (ExcelWorksheetListItem)ListBox_ExcelPreviewSheets.SelectedItem;
             if (item is not null && item.SheetData.Count > 0 && item.SheetData[0].Count > 0)
             {
+                HideExcelPreviewStatusLabels();
+                ProgressBar_LoadingExcelPreview.Value = 0;
+                ShowExcelPreviewInProgess();
+                ProgressBar_LoadingExcelPreview.Maximum = item.SheetData.Count + item.SheetData[0].Count;
+
                 DataGrid_ExcelPreview.Columns.Clear();
                 DataGrid_ExcelPreview.Items.Clear();
+                
                 int columnCount = item.SheetData[0].Count;
                 for (int i = 0; i < columnCount; i++)
                 {
@@ -438,6 +452,7 @@ namespace qaImageViewer
                              ConverterParameter = i,
                          }
                     });
+                    ProgressBar_LoadingExcelPreview.Value++;
                 }
 
              
@@ -445,8 +460,9 @@ namespace qaImageViewer
                 for (int i = 0; i< item.SheetData.Count; i++)
                 {
                     DataGrid_ExcelPreview.Items.Add(item.SheetData[i]);
-                   // MessageBox.Show(string.Join(',', item.SheetData[i]));
+                    ProgressBar_LoadingExcelPreview.Value++;
                 }
+                HideExcelPreviewStatusLabels();
 
                 DataGrid_ExcelPreview.Visibility = Visibility.Visible;
             } else

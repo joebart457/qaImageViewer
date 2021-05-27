@@ -33,7 +33,7 @@ namespace qaImageViewer
             return excelColumnOptions;
         }
 
-        static public List<List<string>> GetSheetData(Excel.Worksheet worksheet, int maxRows, int maxColumns)
+        static public List<List<string>> GetSheetData(IProgress<int> progress, Excel.Worksheet worksheet, int maxRows, int maxColumns)
         {
             try
             {
@@ -55,6 +55,7 @@ namespace qaImageViewer
                             valueString = Convert.ToString(intermediateValue.Value);
                         } 
                         rowValues.Add(valueString);
+                        progress.Report(i * maxColumnIndex + j);
                     }
                     data.Add(rowValues);
                 }

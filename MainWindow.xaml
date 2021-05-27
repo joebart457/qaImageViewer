@@ -56,11 +56,11 @@
                     <TextBox x:Name="TextBox_ExcelTargetFile" HorizontalAlignment="Left" Margin="117,138,0,0" Text="--Choose File--" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
                     <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="242,138,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click"/>
                     <Rectangle HorizontalAlignment="Left" Height="367" Margin="132,341,0,0" Stroke="Black" VerticalAlignment="Top" Width="964"/>
+                    <Label x:Name="Label_ExcelPreviewDataLoaded" Content="Data loaded" HorizontalAlignment="Left" Margin="610,522,0,0" VerticalAlignment="Top" Width="110" FontSize="18" />
                     <DataGrid x:Name="DataGrid_ExcelPreview" Margin="320,369,132,64" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
-
-                    <ProgressBar x:Name="ProgressBar_LoadingExcelPreview" HorizontalAlignment="Left" Height="44" Margin="380,525,0,0" VerticalAlignment="Top" Width="444"/>
-                    <Label x:Name="Label_LoadingExcelPreview" Content="Loading Preview..." HorizontalAlignment="Left" Margin="380,504,0,0" VerticalAlignment="Top" Width="136"/>
-                    <Label x:Name="Label_UnableToLoadExcelPreview" Content="Unable to load preview" HorizontalAlignment="Center" Margin="0,530,0,0" VerticalAlignment="Top" Width="194" FontSize="18"/>
+                    <ProgressBar x:Name="ProgressBar_LoadingExcelPreview" HorizontalAlignment="Left" Height="44" Margin="469,517,0,0" VerticalAlignment="Top" Width="444"/>
+                    <Label x:Name="Label_LoadingExcelPreview" Content="..... loading preview" HorizontalAlignment="Left" Margin="806,561,0,0" VerticalAlignment="Top" Width="117"/>
+                    <Label x:Name="Label_UnableToLoadExcelPreview" Content="Unable to load preview" HorizontalAlignment="Left" Margin="568,515,0,0" VerticalAlignment="Top" Width="194" FontSize="18" />
                     <ListBox x:Name="ListBox_ExcelPreviewSheets" Margin="151,369,879,64" SelectionChanged="ListBox_ExcelPreviewSheets_SelectionChanged"/>
                 </Grid>
             </TabItem>
