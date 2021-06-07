@@ -14,13 +14,18 @@ namespace qaImageViewer
     public class ExcelAppHelperService
     {
 
-        readonly static string IGNORE_OPTION = "IGNORE";
-        static public List<string> GetExcelColumnOptionsAsList(bool includeIgnoreOption = false)
+        public static readonly string IGNORE_OPTION = "_IGNORE_";
+        public static readonly string ROWID_OPTION = "_ROWID_";
+        static public List<string> GetExcelColumnOptionsAsList(bool includeIgnoreOption = false, bool includeRowIdOption = false)
         {
             List<string> excelColumnOptions = new List<string>();
             if (includeIgnoreOption)
             {
                 excelColumnOptions.Add(IGNORE_OPTION);
+            }
+            if (includeRowIdOption)
+            {
+                excelColumnOptions.Add(ROWID_OPTION);
             }
             for (int i = 0; i < 3; i++)
             {

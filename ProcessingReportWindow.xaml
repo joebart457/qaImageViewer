@@ -1,0 +1,19 @@
+﻿<Window x:Class="qaImageViewer.ProcessingReportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:qaImageViewer"
+        mc:Ignorable="d"
+        Title="ProcessingReportWindow" Height="800 " Width="1200">
+    <Grid>
+        <Grid>
+            <GroupBox Header="Processing Exceptions" Margin="27,366,27,32">
+                <DataGrid x:Name="DataGrid_ProcessingExceptions" Margin="26,0,14,0" IsReadOnly="True" Height="343" AutoGenerateColumns="False"/>
+            </GroupBox>
+            <DataGrid x:Name="DataGrid_RowDataView" Margin="520,50,27,454" AutoGenerateColumns="False"/>
+            <ListBox x:Name="ListBox_RowSelect" Margin="46,45,785,454" SelectionChanged="ListBox_RowSelect_SelectionChanged"/>
+        </Grid>
+
+    </Grid>
+</Window>

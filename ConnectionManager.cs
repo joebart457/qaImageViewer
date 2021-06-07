@@ -10,7 +10,7 @@ using qaImageViewer.Service;
 namespace qaImageViewer
 {
 
-    class ConnectionManager
+    public class ConnectionManager
     {
         private string _dbFileName { get; } = "data.db";
         private SQLiteConnection _sqlConn { get; set; }

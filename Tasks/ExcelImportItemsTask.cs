@@ -3,7 +3,9 @@ using qaImageViewer.Repository;
 using qaImageViewer.Service;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -50,7 +52,7 @@ namespace qaImageViewer.Tasks
                 {
                     foreach (ImportColumnMappingListItem columnMapping in _fullProfile.ImportColumnMappings)
                     {
-                        if (!ValidatorService.ValidateSingleColumn(columnMapping.ExcelColumnAlias))
+                        if (!ValidatorService.ValidateSingleColumnOrRowIdOption(columnMapping.ExcelColumnAlias))
                         {
                             invalidParameters += $"{{MappingProfile.ImportColumnMappings.${columnMapping.Id.ToString()}}}";
                         }
@@ -91,7 +93,7 @@ namespace qaImageViewer.Tasks
             _fullProfile = MappingProfileRepository.GetFullMappingProfileById(_connectionManager, _mappingProfileId);
 
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkBook = xlApp.Workbooks.Open(_filename);
+            Excel.Workbook xlWorkBook = xlApp.Workbooks.Open(_filename, ReadOnly: true);
             _worksheet = _sheetIndex < xlWorkBook.Worksheets.Count ? (Excel.Worksheet)xlWorkBook.Worksheets[_sheetIndex] : null;
             ValidateParameters();
             int resultSetId = 0;
@@ -112,21 +114,31 @@ namespace qaImageViewer.Tasks
             for (int i = 1; i <= xlRange.Rows.Count; i++)
             {
 
+                Nullable<int> rowIndex = null;
                 try
                 {
                     Excel.Range rawRowData = (Excel.Range)xlRange.Rows[i];
+                    rowIndex = rawRowData.Row;
                     Document docToAdd = new Document();
                     foreach (ImportColumnMappingListItem columnMapping in _fullProfile.ImportColumnMappings)
                     {
-                        Excel.Range range = (Excel.Range)rawRowData.Columns[columnMapping.ExcelColumnAlias];
-
-                        object value = range is null ? null : range.Value;
+                        object value = null;
+                        rowIndex = null;
+                        if (columnMapping.ExcelColumnAlias == ExcelAppHelperService.ROWID_OPTION)
+                        {
+                            value = rawRowData.Row;
+                        } else
+                        {
+                            Excel.Range range = (Excel.Range)rawRowData.Columns[columnMapping.ExcelColumnAlias];
+                            value = range is null ? null : range.Value;
+                        }
 
                         docToAdd.Columns.Add(new DocumentColumn
                         {
                             Mapping = ColumnMappingService.ConvertFromListItem(columnMapping),
                             Value = ConvertToCorrectType(value, columnMapping.ColumnType)
                         });
+
                     }
                     documents.Add(docToAdd);
                 }
@@ -139,7 +151,8 @@ namespace qaImageViewer.Tasks
                             new ProcessingExceptionListItem
                             {
                                 ResultSetId = resultSetId,
-                                RowIndex = i,
+                                RowIndex = rowIndex == null? i : rowIndex.GetValueOrDefault(), //If unable to grab row index,
+                                                                                               //just make best guess with i
                                 ErrorTrace = ex.ToString()
                             });
                     }
@@ -168,7 +181,21 @@ namespace qaImageViewer.Tasks
                 progress.Report(i);
                 callback();
             }
-            
+
+            xlWorkBook.Close();
+            if (xlApp is not null) {
+                int id;
+                // Find the Process Id
+                Utilities.GetWindowThreadProcessId(xlApp.Hwnd, out id);
+                Process excelProcess = Process.GetProcessById(id);
+                xlApp.Quit();
+                excelProcess.Kill();
+            }
+            Utilities.ReleaseObject(_worksheet);
+            Utilities.ReleaseObject(xlWorkBook);
+            Utilities.ReleaseObject(xlApp);
         }
+
+  
     }
 }

@@ -53,8 +53,7 @@
                     <ComboBox x:Name="ComboBox_MappingProfilesSelector" HorizontalAlignment="Left" Margin="99,50,0,0" VerticalAlignment="Top" Width="217"/>
                     <DataGrid x:Name="DataGrid_PreviousImportResults" Margin="411,50,474,555" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
                     <Label Content="Previous Imports" HorizontalAlignment="Left" Margin="380,16,0,0" VerticalAlignment="Top" Height="34" Width="141" FontSize="14"/>
-                    <TextBox x:Name="TextBox_ExcelTargetFile" HorizontalAlignment="Left" Margin="117,138,0,0" Text="--Choose File--" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-                    <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="242,138,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click"/>
+                    <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="242,138,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click" Width="74"/>
                     <Rectangle HorizontalAlignment="Left" Height="367" Margin="133,238,0,0" Stroke="Black" VerticalAlignment="Top" Width="970"/>
                     <Label x:Name="Label_ExcelPreviewDataLoaded" Content="Data loaded" HorizontalAlignment="Left" Margin="610,522,0,0" VerticalAlignment="Top" Width="110" FontSize="18" />
                     <DataGrid x:Name="DataGrid_ExcelPreview" Margin="336,260,128,173" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
@@ -65,6 +64,7 @@
                     <Button x:Name="Button_RunExcelImport" Content="Import" HorizontalAlignment="Left" Margin="225,177,0,0" VerticalAlignment="Top" Click="Button_RunExcelImport_Click"/>
                     <ProgressBar x:Name="ProgressBar_ExcelImportItemsTask" HorizontalAlignment="Left" Height="35" Margin="796,78,0,0" VerticalAlignment="Top" Width="158"/>
                     <Label x:Name="Label_ExcelWorkbookName" Content="--Select File--" HorizontalAlignment="Left" Margin="161,234,0,0" VerticalAlignment="Top" Width="198"/>
+                    <Button x:Name="Button_RouteToResults" Content=" View Processing Report" HorizontalAlignment="Left" Margin="796,133,0,0" VerticalAlignment="Top" Click="Button_RouteToResults_Click"/>
                 </Grid>
             </TabItem>
         </TabControl>

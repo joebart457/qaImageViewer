@@ -162,8 +162,6 @@ namespace qaImageViewer.Repository
 
                 
                 insertIntoResultSetCmd.CommandText = $"INSERT INTO {resultTableName} ({columnsToSelect}) VALUES {columnValuesToInsert}";
-                LoggerService.LogError($"INSERT INTO {resultTableName} ({columnsToSelect}) VALUES {columnValuesToInsert}");
-
                 insertIntoResultSetCmd.ExecuteNonQuery();
 
             }
@@ -263,7 +261,7 @@ namespace qaImageViewer.Repository
             string whereClause = "";
 
 
-            if (filters.Count > 0)
+            if (filters != null && filters.Count > 0)
             {
                 whereClause += "WHERE ";
                 for (int i = 0; i< filters.Count; i++)
@@ -329,6 +327,104 @@ namespace qaImageViewer.Repository
             }
         }
 
-        
+        public static List<DocumentListItem> GetListItemsFromResultSet(ConnectionManager cm, int importResultId, List<ColumnFilter> filters)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+
+                ImportResults res = ImportResultRepository.GetImportResult(cm, importResultId);
+                if (res is null)
+                {
+                    throw new Exception($"unable to find result set with id {importResultId}");
+                }
+
+                string resultTableName = res.ResultTableName;
+
+                MappingProfile profile = MappingProfileRepository.GetFullMappingProfileById(cm, res.ProfileId);
+
+
+                List<DocumentListItem> docResults = new List<DocumentListItem>();
+                var selectEntriesCmd = BuildResultSetQuery(cm, resultTableName, profile, filters);
+
+                var reader = selectEntriesCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    DocumentListItem docToAdd = new DocumentListItem
+                    {
+                        Id = reader.GetInt32(0),
+                        ResultSetId = importResultId,
+                        DisplayText = $"{importResultId} - {reader.GetInt32(0)}"
+                    };
+
+                    docResults.Add(docToAdd);
+                }
+
+                return docResults;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
+
+        public static List<DocumentColumn> GetFullRowDataAsKeyValuePairs(ConnectionManager cm, DocumentListItem documentListItem)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+                var conn = cm.GetSQLConnection();
+
+                ImportResults res = ImportResultRepository.GetImportResult(cm, documentListItem.ResultSetId);
+                if (res is null)
+                {
+                    throw new Exception($"unable to find result set with id {documentListItem.ResultSetId}");
+                }
+
+                string resultTableName = res.ResultTableName;
+
+                MappingProfile profile = MappingProfileRepository.GetFullMappingProfileById(cm, res.ProfileId);
+
+                var selectEntriesCmd = conn.CreateCommand();
+
+                string columnsToSelect = BuildSelectClauseString(profile);
+
+                selectEntriesCmd.CommandText = $"SELECT {columnsToSelect} FROM {resultTableName} WHERE id=@Id";
+                selectEntriesCmd.Parameters.Add(new SQLiteParameter("@Id", documentListItem.Id));
+
+                var reader = selectEntriesCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Document doc = new Document
+                    {
+                        Id = reader.GetInt32(0),
+                        ResultTableName = resultTableName,
+                        Columns = new List<DocumentColumn>()
+                    };
+
+                    for (int i = 0; i < profile.ImportColumnMappings.Count; i++)
+                    {
+                        doc.Columns.Add(new DocumentColumn
+                        {
+                            Mapping = ColumnMappingService.ConvertFromListItem(profile.ImportColumnMappings[i]),
+                            Value = reader.GetValue(i + 1)
+                        });
+
+                    }
+
+                    return doc.Columns;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
+
+
     }
 }

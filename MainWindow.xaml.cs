@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,6 +34,7 @@ namespace qaImageViewer
     public partial class MainWindow : Window
     {
         private ConnectionManager _connectionManager = new ConnectionManager();
+        private ProcessingReportWindow _processingReportWindow = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -156,7 +159,7 @@ namespace qaImageViewer
 
             // Add Excel Column Mapping ComboBox
             var excelColumnAliasComboBoxTemplate = new FrameworkElementFactory(typeof(ComboBox));
-            excelColumnAliasComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, ExcelAppHelperService.GetExcelColumnOptionsAsList());
+            excelColumnAliasComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, ExcelAppHelperService.GetExcelColumnOptionsAsList(false, true));
             excelColumnAliasComboBoxTemplate.SetBinding(ComboBox.SelectedItemProperty, new Binding("ExcelColumnAlias"));
             excelColumnAliasComboBoxTemplate.AddHandler(
                 ComboBox.SelectionChangedEvent,
@@ -437,11 +440,17 @@ namespace qaImageViewer
                 int maxPreviewRows = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Row.Count", 5);
                 int maxPreviewColumns = ConfigRepository.GetIntegerOption(_connectionManager, "Excel.Preview.Column.Count", 5);
 
-
+                
+                Excel.Application xlApp = null;
                 Excel.Workbook workbook = await Task.Run(() => { 
-                    Excel.Application xlApp = new Excel.Application(); 
-                    return xlApp.Workbooks.Open(filename); 
+                    xlApp = new Excel.Application(); 
+                    return xlApp.Workbooks.Open(filename, ReadOnly: true); 
                 });
+
+                int id;
+                // Find the excel process id
+                Utilities.GetWindowThreadProcessId(xlApp.Hwnd, out id);
+                Process excelProcess = Process.GetProcessById(id);
 
                 Label_ExcelWorkbookName.Content = filename;
 
@@ -464,6 +473,10 @@ namespace qaImageViewer
                 ProgressBar_LoadingExcelPreview.Value = ProgressBar_LoadingExcelPreview.Maximum;
                 ShowDataLoadedSuccessfully();
                 workbook.Close();
+                if (xlApp is not null) xlApp.Quit();
+                excelProcess.Kill();
+                Utilities.ReleaseObject(workbook);
+                Utilities.ReleaseObject(xlApp);
 
             } catch (Exception ex)
             {
@@ -533,6 +546,8 @@ namespace qaImageViewer
                 return;
             }
 
+            Button_RunExcelImport.IsEnabled = false;
+
             int batchSize = ConfigRepository.GetIntegerOption(_connectionManager, "Tasks.Excel.Import.BatchSize", 10);
 
             ExcelImportItemsTask excelImportItemsTask = new ExcelImportItemsTask(
@@ -547,8 +562,34 @@ namespace qaImageViewer
             IProgress<int> progress = new Progress<int>(value => {
                 ProgressBar_ExcelImportItemsTask.Value = value;
             });
+            try
+            {
+                await Task.Run(() => { excelImportItemsTask.Execute(progress, () => { }); });
+                Button_RunExcelImport.IsEnabled = true;
+            } catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                MessageBox.Show("Unable to complete import task. See logs for details", "Error");
+                Button_RunExcelImport.IsEnabled = true;
+            }
+        }
 
-            await Task.Run(() => { excelImportItemsTask.Execute(progress, () => { }); });
+        private void Button_RouteToResults_Click(object sender, RoutedEventArgs e)
+        {
+            ImportResultsListItem selectedResults = (ImportResultsListItem)DataGrid_PreviousImportResults.SelectedItem;
+            if (selectedResults != null)
+            {
+                if (_processingReportWindow == null || _processingReportWindow.IsLoaded == false)
+                {
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id);
+                    _processingReportWindow.Show();
+                } else
+                {
+                    _processingReportWindow.Close();
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id);
+                    _processingReportWindow.Show();
+                }
+            }
         }
     }
 }
