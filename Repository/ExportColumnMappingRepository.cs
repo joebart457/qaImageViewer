@@ -20,7 +20,7 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var selectColumnMappingsCmd = conn.CreateCommand();
 
-                selectColumnMappingsCmd.CommandText = @"SELECT id, profile_id, import_column_mapping_id, excel_column_alias FROM export_column_mapping WHERE profile_id = @ProfileId";
+                selectColumnMappingsCmd.CommandText = @"SELECT id, profile_id, import_column_mapping_id, excel_column_alias, match FROM export_column_mapping WHERE profile_id = @ProfileId";
                 selectColumnMappingsCmd.Parameters.Add(new SQLiteParameter("@ProfileId", profileId));
 
                 var reader = selectColumnMappingsCmd.ExecuteReader();
@@ -32,6 +32,7 @@ namespace qaImageViewer.Repository
                         ProfileId = reader.GetInt32(1),
                         ImportColumnMappingId = reader.GetInt32(2),
                         ExcelColumnAlias = reader.GetString(3),
+                        Match = reader.GetBoolean(4)
                     });
                 }
 
@@ -53,7 +54,7 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var selectColumnMappingsCmd = conn.CreateCommand();
 
-                selectColumnMappingsCmd.CommandText = @"SELECT ecm.id, ecm.profile_id, ecm.import_column_mapping_id, ecm.excel_column_alias, icm.column_alias 
+                selectColumnMappingsCmd.CommandText = @"SELECT ecm.id, ecm.profile_id, ecm.import_column_mapping_id, ecm.excel_column_alias, icm.column_alias, ecm.match
                                                         FROM export_column_mapping ecm, import_column_mapping icm 
                                                         WHERE ecm.profile_id = @ProfileId AND ecm.import_column_mapping_id = icm.id";
                 selectColumnMappingsCmd.Parameters.Add(new SQLiteParameter("@ProfileId", profileId));
@@ -68,6 +69,7 @@ namespace qaImageViewer.Repository
                         ImportColumnMappingId = reader.GetInt32(2),
                         ExcelColumnAlias = reader.GetString(3),
                         ImportColumnMappingAlias = reader.GetString(4),
+                        Match = reader.GetBoolean(5)
                     });
                 }
 
@@ -88,11 +90,12 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var insertColumnMappingCmd = conn.CreateCommand();
 
-                insertColumnMappingCmd.CommandText = @"INSERT INTO export_column_mapping (profile_id, import_column_mapping_id, excel_column_alias) 
-                                                      VALUES(@ProfileId, @ImportColumnMappingId, @ExcelColumnAlias)";
+                insertColumnMappingCmd.CommandText = @"INSERT INTO export_column_mapping (profile_id, import_column_mapping_id, excel_column_alias, match) 
+                                                      VALUES(@ProfileId, @ImportColumnMappingId, @ExcelColumnAlias, @Match)";
                 insertColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ProfileId", columnMapping.ProfileId));
                 insertColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ImportColumnMappingId", columnMapping.ImportColumnMappingId));
                 insertColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ExcelColumnAlias", columnMapping.ExcelColumnAlias));
+                insertColumnMappingCmd.Parameters.Add(new SQLiteParameter("@Match", columnMapping.Match));
 
                 insertColumnMappingCmd.ExecuteNonQuery();
             }
@@ -114,12 +117,14 @@ namespace qaImageViewer.Repository
                 updateColumnMappingCmd.CommandText = @"UPDATE export_column_mapping SET 
                                                          profile_id = @ProfileId,
                                                          import_column_mapping_id = @ImportColumnMappingId, 
-                                                         excel_column_alias = @ExcelColumnAlias
+                                                         excel_column_alias = @ExcelColumnAlias,
+                                                         match = @Match
                                                       WHERE id = @Id";
                 updateColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ProfileId", columnMapping.ProfileId));
                 updateColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ImportColumnMappingId", columnMapping.ImportColumnMappingId));
                 updateColumnMappingCmd.Parameters.Add(new SQLiteParameter("@ExcelColumnAlias", columnMapping.ExcelColumnAlias));
                 updateColumnMappingCmd.Parameters.Add(new SQLiteParameter("@Id", columnMapping.Id));
+                updateColumnMappingCmd.Parameters.Add(new SQLiteParameter("@Match", columnMapping.Match));
 
                 updateColumnMappingCmd.ExecuteNonQuery();
             }

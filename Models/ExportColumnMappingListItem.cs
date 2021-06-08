@@ -21,6 +21,7 @@ namespace qaImageViewer.Models
         private int _importColumnMappingId { get; set; }
         private string _excelColumnAlias { get; set; }
         private string _importColumnMappingAlias { get; set; }
+        private bool _match { get; set; }
         public int Id
         {
             get { return _id; }
@@ -46,6 +47,11 @@ namespace qaImageViewer.Models
         {
             get { return _importColumnMappingAlias; }
             set { _importColumnMappingAlias = value; OnPropertyChanged("ImportColumnMappingAlias"); }
+        }
+        public bool Match
+        {
+            get { return _match; }
+            set { _match = value; OnPropertyChanged("Match"); }
         }
     }
 }

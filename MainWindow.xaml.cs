@@ -33,19 +33,30 @@ namespace qaImageViewer
     ///
     public partial class MainWindow : Window
     {
-        private ConnectionManager _connectionManager = new ConnectionManager();
+        private ConnectionManager _connectionManager = null;
         private ProcessingReportWindow _processingReportWindow = null;
+        private ImageViewer _imageViewerWindow = null;
         public MainWindow()
         {
             InitializeComponent();
-            SetupImportColumnMappingsViewColumns();
-            SetupImportColumnMappingsEditColumns();
-            SetupExportColumnMappingsEditColumns();
-            SetupPreviousImportResultsDataGrid();
-            PopulateImportProfilesComboBox();
-            HideExcelPreviewStatusLabels();
-            ResetExcelPreviewData();
-            
+
+
+            try
+            {
+                _connectionManager = new ConnectionManager();
+
+                SetupImportColumnMappingsViewColumns();
+                SetupImportColumnMappingsEditColumns();
+                SetupExportColumnMappingsEditColumns();
+                SetupPreviousImportResultsDataGrid();
+                PopulateImportProfilesComboBox();
+                HideExcelPreviewStatusLabels();
+                ResetExcelPreviewData();
+            } catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
         }
 
 
@@ -117,6 +128,26 @@ namespace qaImageViewer
                 {
                     Header = "Map to Excel Column",
                     CellTemplate = new DataTemplate() { VisualTree = excelColumnAliasComboBoxTemplate },
+                }
+            );
+
+            var matchCheckboxTemplate = new FrameworkElementFactory(typeof(CheckBox));
+            matchCheckboxTemplate.SetBinding(CheckBox.IsCheckedProperty, new Binding("Match"));
+            matchCheckboxTemplate.AddHandler(
+                CheckBox.CheckedEvent,
+                new RoutedEventHandler((o,e) => {
+                    if (DataGrid_ExportColumnMappingsEdit.SelectedItem is not null)
+                    {
+                        ((ExportColumnMappingListItem)DataGrid_ExportColumnMappingsEdit.SelectedItem).Match = true;
+                        ExportColumnMappingRepository.UpdateColumnMapping(_connectionManager, ColumnMappingService.ConvertFromListItem((ExportColumnMappingListItem)DataGrid_ExportColumnMappingsEdit.SelectedItem));
+                    }
+                })
+            );
+            DataGrid_ExportColumnMappingsEdit.Columns.Add(
+                new DataGridTemplateColumn()
+                {
+                    Header = "Match",
+                    CellTemplate = new DataTemplate() { VisualTree = matchCheckboxTemplate },
                 }
             );
         }
@@ -340,7 +371,7 @@ namespace qaImageViewer
                     {
                         ColumnAlias = "alias",
                         ColumnType = DBColumnType.TEXT,
-                        ExcelColumnAlias = "A",
+                        ExcelColumnAlias = ExcelAppHelperService.ROWID_OPTION,
                         ProfileId = profile.Id,
                         ColumnName = MappingProfileHelperService.GetNextColumnName(profile)
                     };
@@ -352,7 +383,7 @@ namespace qaImageViewer
                     ExportColumnMapping newExportMapping = new ExportColumnMapping
                     {
                         ImportColumnMappingId = id,
-                        ExcelColumnAlias = "IGNORE",
+                        ExcelColumnAlias = ExcelAppHelperService.IGNORE_OPTION,
                         ProfileId = profile.Id
                     };
 
@@ -399,7 +430,6 @@ namespace qaImageViewer
             Label_UnableToLoadExcelPreview.Visibility = Visibility.Hidden;
             ProgressBar_LoadingExcelPreview.Visibility = Visibility.Hidden;
             Label_LoadingExcelPreview.Visibility = Visibility.Hidden;
-            Label_ExcelPreviewDataLoaded.Visibility = Visibility.Hidden;
         }
 
         private void ResetExcelPreviewData()
@@ -418,7 +448,6 @@ namespace qaImageViewer
         private void ShowDataLoadedSuccessfully()
         {
             HideExcelPreviewStatusLabels();
-            Label_ExcelPreviewDataLoaded.Visibility = Visibility.Visible;
         }
 
 
@@ -561,16 +590,20 @@ namespace qaImageViewer
             ProgressBar_ExcelImportItemsTask.Maximum = ws.UsedRowCount;
             IProgress<int> progress = new Progress<int>(value => {
                 ProgressBar_ExcelImportItemsTask.Value = value;
+                Label_ImportStatus.Content = $"importing row {value.ToString()} of {ProgressBar_ExcelImportItemsTask.Maximum.ToString()}";
             });
             try
             {
                 await Task.Run(() => { excelImportItemsTask.Execute(progress, () => { }); });
                 Button_RunExcelImport.IsEnabled = true;
+                Label_ImportStatus.Content = "Done";
+                PopulatePreviousImportResultsDataGrid();
             } catch (Exception ex)
             {
                 LoggerService.LogError(ex.ToString());
                 MessageBox.Show("Unable to complete import task. See logs for details", "Error");
                 Button_RunExcelImport.IsEnabled = true;
+                Label_ImportStatus.Content = "Done";
             }
         }
 
@@ -588,6 +621,31 @@ namespace qaImageViewer
                     _processingReportWindow.Close();
                     _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id);
                     _processingReportWindow.Show();
+                }
+            }
+        }
+
+        private void DataGrid_PreviousImportResults_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Button_RouteToResults.IsEnabled = true;
+            Button_RouteToReviewWindow.IsEnabled = true;
+        }
+
+        private void Button_RouteToReviewWindow_Click(object sender, RoutedEventArgs e)
+        {
+            ImportResultsListItem selectedResults = (ImportResultsListItem)DataGrid_PreviousImportResults.SelectedItem;
+            if (selectedResults != null)
+            {
+                if (_imageViewerWindow == null || _imageViewerWindow.IsLoaded == false)
+                {
+                    _imageViewerWindow = new ImageViewer(_connectionManager, selectedResults.Id);
+                    _imageViewerWindow.Show();
+                }
+                else
+                {
+                    _imageViewerWindow.Close();
+                    _imageViewerWindow = new ImageViewer(_connectionManager, selectedResults.Id);
+                    _imageViewerWindow.Show();
                 }
             }
         }

@@ -37,12 +37,6 @@ namespace qaImageViewer
         }
 
 
-        public void ChangeResultSet(int resultSetId)
-        {
-            _resultSetId = resultSetId;
-            PopulateProcessingExceptionsDataGrid();
-        }
-
         private void SetupProcessingExceptionDataGridColumns()
         {
             DataGrid_ProcessingExceptions.Columns.Clear();

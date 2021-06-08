@@ -5,28 +5,31 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:qaImageViewer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="1200
-        ">
-
-    <Grid>
-        <TabControl AutomationProperties.Name="TabControl_MainNavigation" SelectionChanged="TabControl_SelectionChanged">
+        Title="MainWindow" SizeToContent="WidthAndHeight">
+    <Grid Height="800" Width="1200">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="197*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <TabControl AutomationProperties.Name="TabControl_MainNavigation" SelectionChanged="TabControl_SelectionChanged" Grid.ColumnSpan="2">
             <TabItem Header="View">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="21*"/>
                         <ColumnDefinition Width="15*"/>
                         <ColumnDefinition Width="77*"/>
-                        <ColumnDefinition Width="1081*"/>
+                        <ColumnDefinition Width="52*"/>
+                        <ColumnDefinition Width="1029*"/>
                     </Grid.ColumnDefinitions>
-                    <Image HorizontalAlignment="Left" Height="522" Margin="46,136,0,0" VerticalAlignment="Top" Width="679" Grid.Column="3"/>
-                    <ListView Margin="792,165,45,150" Grid.Column="3">
+                    <Image HorizontalAlignment="Left" Height="522" Margin="46,136,0,0" VerticalAlignment="Top" Width="679" Grid.Column="3" Grid.ColumnSpan="2"/>
+                    <ListView Margin="740,165,45,150" Grid.Column="4">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn/>
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Button Content="+" HorizontalAlignment="Left" Margin="1014,136,0,0" VerticalAlignment="Top" Height="24" Width="28" Grid.Column="3"/>
+                    <Button Content="+" HorizontalAlignment="Left" Margin="962,136,0,0" VerticalAlignment="Top" Height="24" Width="28" Grid.Column="4"/>
 
                 </Grid>
             </TabItem>
@@ -47,24 +50,30 @@
                     <Label Content="Export Mapping" Grid.Column="1" HorizontalAlignment="Left" Margin="648,41,0,0" VerticalAlignment="Top" Height="34" Width="109" FontSize="14"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Import" HorizontalAlignment="Left" Margin="-2,-2,0,0" Width="52">
+            <TabItem Header="Import">
                 <Grid Background="#FFE5E5E5">
-                    <Rectangle HorizontalAlignment="Left" Height="211" Margin="367,16,0,0" Stroke="Black" VerticalAlignment="Top" Width="369"/>
-                    <ComboBox x:Name="ComboBox_MappingProfilesSelector" HorizontalAlignment="Left" Margin="99,50,0,0" VerticalAlignment="Top" Width="217"/>
-                    <DataGrid x:Name="DataGrid_PreviousImportResults" Margin="411,50,474,555" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
-                    <Label Content="Previous Imports" HorizontalAlignment="Left" Margin="380,16,0,0" VerticalAlignment="Top" Height="34" Width="141" FontSize="14"/>
-                    <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="242,138,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click" Width="74"/>
-                    <Rectangle HorizontalAlignment="Left" Height="367" Margin="133,238,0,0" Stroke="Black" VerticalAlignment="Top" Width="970"/>
-                    <Label x:Name="Label_ExcelPreviewDataLoaded" Content="Data loaded" HorizontalAlignment="Left" Margin="610,522,0,0" VerticalAlignment="Top" Width="110" FontSize="18" />
-                    <DataGrid x:Name="DataGrid_ExcelPreview" Margin="336,260,128,173" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
-                    <ProgressBar x:Name="ProgressBar_LoadingExcelPreview" HorizontalAlignment="Left" Height="44" Margin="485,408,0,0" VerticalAlignment="Top" Width="444"/>
-                    <Label x:Name="Label_LoadingExcelPreview" Content="..... loading preview" HorizontalAlignment="Left" Margin="822,452,0,0" VerticalAlignment="Top" Width="117"/>
-                    <Label x:Name="Label_UnableToLoadExcelPreview" Content="Unable to load preview" HorizontalAlignment="Left" Margin="610,413,0,0" VerticalAlignment="Top" Width="194" FontSize="18" />
-                    <ListBox x:Name="ListBox_ExcelPreviewSheets" Margin="167,260,835,173" SelectionChanged="ListBox_ExcelPreviewSheets_SelectionChanged"/>
-                    <Button x:Name="Button_RunExcelImport" Content="Import" HorizontalAlignment="Left" Margin="225,177,0,0" VerticalAlignment="Top" Click="Button_RunExcelImport_Click"/>
-                    <ProgressBar x:Name="ProgressBar_ExcelImportItemsTask" HorizontalAlignment="Left" Height="35" Margin="796,78,0,0" VerticalAlignment="Top" Width="158"/>
-                    <Label x:Name="Label_ExcelWorkbookName" Content="--Select File--" HorizontalAlignment="Left" Margin="161,234,0,0" VerticalAlignment="Top" Width="198"/>
-                    <Button x:Name="Button_RouteToResults" Content=" View Processing Report" HorizontalAlignment="Left" Margin="796,133,0,0" VerticalAlignment="Top" Click="Button_RouteToResults_Click"/>
+                    <GroupBox Header="Import Results" Margin="36,502,30,26">
+                        <Grid Height="211">
+                            <DataGrid x:Name="DataGrid_PreviousImportResults" Margin="15,10,15,35" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="DataGrid_PreviousImportResults_SelectionChanged"/>
+                            <Button x:Name="Button_RouteToResults" Content=" View Processing Report" HorizontalAlignment="Left" Margin="970,191,0,0" VerticalAlignment="Top" Click="Button_RouteToResults_Click" IsEnabled="False"/>
+                            <Button x:Name="Button_RouteToReviewWindow" Content="View Results" HorizontalAlignment="Left" Margin="889,191,0,0" VerticalAlignment="Top" IsEnabled="False" Click="Button_RouteToReviewWindow_Click"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Header="Import" Margin="36,10,30,275">
+                        <Grid>
+                            <ComboBox x:Name="ComboBox_MappingProfilesSelector" HorizontalAlignment="Left" Margin="23,404,0,0" VerticalAlignment="Top" Width="212"/>
+                            <Button x:Name="Button_RunExcelImport" Content="Import" HorizontalAlignment="Left" Margin="249,404,0,0" VerticalAlignment="Top" Click="Button_RunExcelImport_Click" Width="54"/>
+                            <ProgressBar x:Name="ProgressBar_ExcelImportItemsTask" HorizontalAlignment="Left" Height="22" Margin="335,406,0,0" VerticalAlignment="Top" Width="688"/>
+                            <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="23,12,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click" Width="74"/>
+                            <Label x:Name="Label_ExcelWorkbookName" Content="--Select File--" HorizontalAlignment="Left" Margin="119,9,0,0" VerticalAlignment="Top" Width="959"/>
+                            <ListBox x:Name="ListBox_ExcelPreviewSheets" Margin="23,47,881,74" SelectionChanged="ListBox_ExcelPreviewSheets_SelectionChanged"/>
+                            <DataGrid x:Name="DataGrid_ExcelPreview" Margin="235,47,38,74" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*" IsReadOnly="True"/>
+                            <ProgressBar x:Name="ProgressBar_LoadingExcelPreview" HorizontalAlignment="Left" Height="44" Margin="444,178,0,0" VerticalAlignment="Top" Width="444"/>
+                            <Label x:Name="Label_UnableToLoadExcelPreview" Content="Unable to load preview" HorizontalAlignment="Left" Margin="569,183,0,0" VerticalAlignment="Top" Width="194" FontSize="18" />
+                            <Label x:Name="Label_LoadingExcelPreview" Content="..... loading preview" HorizontalAlignment="Left" Margin="772,224,0,0" VerticalAlignment="Top" Width="116"/>
+                            <Label x:Name="Label_ImportStatus" Content="Idle" HorizontalAlignment="Left" Margin="759,428,0,0" VerticalAlignment="Top" Width="264" FlowDirection="RightToLeft"/>
+                        </Grid>
+                    </GroupBox>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -62,5 +62,10 @@ namespace qaImageViewer.Models
             get { return _changed; }
             set { _changed = value; OnPropertyChanged("Changed"); }
         }
+
+        public override string ToString()
+        {
+            return ColumnAlias;
+        }
     }
 }

@@ -97,6 +97,23 @@ namespace qaImageViewer.Repository
             }
         }
 
+        public static MappingProfile GetFullMappingProfileForResultSet(ConnectionManager cm, int resultSetId)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+                ImportResults results = ImportResultRepository.GetImportResult(cm, resultSetId);
+                if (results is null) return null;
+                return GetFullMappingProfileById(cm, results.ProfileId);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
+
+
 
         public static void UpdateMappingProfile(ConnectionManager cm, MappingProfile profile)
         {

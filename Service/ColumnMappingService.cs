@@ -49,7 +49,8 @@ namespace qaImageViewer.Service
                 Id = listItem.Id,
                 ExcelColumnAlias = listItem.ExcelColumnAlias,
                 ProfileId = listItem.ProfileId,
-                ImportColumnMappingId = listItem.ImportColumnMappingId
+                ImportColumnMappingId = listItem.ImportColumnMappingId,
+                Match = listItem.Match
             };
         }
 

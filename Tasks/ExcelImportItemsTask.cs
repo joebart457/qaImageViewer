@@ -94,7 +94,7 @@ namespace qaImageViewer.Tasks
 
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkBook = xlApp.Workbooks.Open(_filename, ReadOnly: true);
-            _worksheet = _sheetIndex < xlWorkBook.Worksheets.Count ? (Excel.Worksheet)xlWorkBook.Worksheets[_sheetIndex] : null;
+            _worksheet = _sheetIndex <= xlWorkBook.Worksheets.Count ? (Excel.Worksheet)xlWorkBook.Worksheets[_sheetIndex] : null;
             ValidateParameters();
             int resultSetId = 0;
             try
@@ -164,7 +164,7 @@ namespace qaImageViewer.Tasks
                     }
                 }
 
-                if (documents.Count == _batchSize)
+                if (documents.Count == _batchSize || i + 1 >= xlRange.Rows.Count)
                 {
                     try
                     {

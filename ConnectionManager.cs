@@ -124,6 +124,7 @@ namespace qaImageViewer
                     profile_id INTEGER NOT NULL,
                 	import_column_mapping_id	INTEGER NOT NULL,
                     excel_column_alias TEXT,
+                    match BOOLEAN DEFAULT FALSE,
                 	PRIMARY KEY(id AUTOINCREMENT),
                     FOREIGN KEY('import_column_mapping_id') REFERENCES import_column_mapping(id) ON DELETE CASCADE
                 ); ";

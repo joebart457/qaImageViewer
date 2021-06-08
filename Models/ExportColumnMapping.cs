@@ -12,5 +12,6 @@ namespace qaImageViewer.Models
         public int ProfileId { get; set; }
         public int ImportColumnMappingId { get; set; }
         public string ExcelColumnAlias { get; set; }
+        public bool Match { get; set; }
     }
 }
