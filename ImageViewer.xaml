@@ -7,14 +7,38 @@
         mc:Ignorable="d"
         Title="ImageViewer" SizeToContent="WidthAndHeight">
     <Grid Height="1000" Width="1800">
-        <Grid>
-            <Image x:Name="Image_ViewCapture" HorizontalAlignment="Left" Height="737" Margin="281,145,0,0" VerticalAlignment="Top" Width="1117"/>
-            <GroupBox Header="Properties" Margin="1425,28,10,28">
-                <DataGrid x:Name="DataGrid_PropertyView" IsReadOnly="True" AutoGenerateColumns="False"/>
+        <Grid Background="#FFEEEEEE">
+            <local:ZoomBorder x:Name="border" ClipToBounds="True" Background="Gray" Margin="338,103,418,28">
+                <Image x:Name="Image_ViewCapture" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </local:ZoomBorder>
+            <GroupBox Header="Properties" Margin="1425,28,10,416">
+                <DataGrid x:Name="DataGrid_PropertyView" IsReadOnly="True" AutoGenerateColumns="False" Height="533"/>
             </GroupBox>
-            <ListBox x:Name="ListBox_ItemSelection" Margin="0,76,1524,0" SelectionChanged="ListBox_ItemSelection_SelectionChanged"/>
-            <ComboBox x:Name="ComboBox_FilePathProperty" HorizontalAlignment="Left" Margin="613,60,0,0" VerticalAlignment="Top" Width="234" SelectionChanged="ComboBox_FilePathProperty_SelectionChanged"/>
-            <ComboBox x:Name="ComboBox_ImageRotation" HorizontalAlignment="Left" Margin="1014,60,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ImageRotation_SelectionChanged"/>
+            <ListBox x:Name="ListBox_ItemSelection" Margin="0,0,1506,0" SelectionChanged="ListBox_ItemSelection_SelectionChanged"/>
+            <GroupBox Header="Image Controls" Margin="338,14,418,911">
+                <Grid>
+                    <ComboBox x:Name="ComboBox_FilePathProperty" HorizontalAlignment="Left" Margin="97,13,0,0" VerticalAlignment="Top" Width="234" SelectionChanged="ComboBox_FilePathProperty_SelectionChanged"/>
+                    <ComboBox x:Name="ComboBox_ImageRotation" HorizontalAlignment="Left" Margin="853,13,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ImageRotation_SelectionChanged"/>
+                    <Label Content="Image Path" HorizontalAlignment="Left" Margin="22,11,0,0" VerticalAlignment="Top"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Attributes" Margin="1432,589,10,28">
+                <Grid>
+                    <ListBox x:Name="ListBox_AttributesEdit" Margin="5,10,5,35" SelectionMode="Multiple" SelectionChanged="ListBox_AttributesEdit_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="IsSelected" Value="{Binding IsAssigned, Mode=TwoWay}" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsAssigned, Mode=TwoWay}" Content="{Binding Name}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button x:Name="Button_AddAttribute" Content="Add Attribute" HorizontalAlignment="Left" Margin="260,330,0,0" VerticalAlignment="Top" Click="Button_AddAttribute_Click"/>
+                </Grid>
+            </GroupBox>
         </Grid>
 
     </Grid>

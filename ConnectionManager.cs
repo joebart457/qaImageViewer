@@ -160,11 +160,22 @@ namespace qaImageViewer
                 createAttributeTblCmd.CommandText = @"CREATE TABLE attribute (
                 	id	INTEGER NOT NULL,
                 	name	TEXT NOT NULL,
-                	is_file	BOOLEAN NOT NULL,
                 	PRIMARY KEY(id AUTOINCREMENT)
                 );";
 
                 createAttributeTblCmd.ExecuteNonQuery();
+
+                var createItemAttributeTblCmd = _sqlConn.CreateCommand();
+                createItemAttributeTblCmd.CommandText = @"CREATE TABLE item_attribute (
+                	id	INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL,
+                    result_set_id NOT NULL,
+                    attribute_id INTEGER NOT NULL,
+                	PRIMARY KEY(id AUTOINCREMENT),
+                    FOREIGN KEY('attribute_id') REFERENCES attribute(id) ON DELETE CASCADE
+                );";
+
+                createItemAttributeTblCmd.ExecuteNonQuery();
 
                 var createEntryTblCmd = _sqlConn.CreateCommand();
                 createEntryTblCmd.CommandText = @"CREATE TABLE entry (

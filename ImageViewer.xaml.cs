@@ -34,6 +34,7 @@ namespace qaImageViewer
             PopulateItemSelectionListBox();
             PopulateFilePathPropertyComboBox();
             SetupImageRotationComboBox();
+            PopulateAttributesEditListBox();
         }
 
 
@@ -66,10 +67,12 @@ namespace qaImageViewer
             });
         }
 
-        private void PopulatePropertyViewDataGrid(DocumentListItem doc)
+        private void PopulatePropertyViewDataGrid()
         {
-            if (doc == null) { DataGrid_PropertyView.ItemsSource = null; return; }
-            DataGrid_PropertyView.ItemsSource = ResultSetRepository.GetFullRowDataAsKeyValuePairs(_connectionManager, doc);
+            DocumentListItem selected = (DocumentListItem)ListBox_ItemSelection.SelectedItem;
+
+            if (selected == null) { DataGrid_PropertyView.ItemsSource = null; return; }
+            DataGrid_PropertyView.ItemsSource = ResultSetRepository.GetFullRowDataAsKeyValuePairs(_connectionManager, selected);
         }
 
         private void PopulateFilePathPropertyComboBox()
@@ -83,8 +86,8 @@ namespace qaImageViewer
 
         private void ListBox_ItemSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            DocumentListItem selected = (DocumentListItem)ListBox_ItemSelection.SelectedItem;
-            PopulatePropertyViewDataGrid(selected);
+            PopulatePropertyViewDataGrid();
+            PopulateAttributesEditListBox();
             LoadMainImage();
         }
 
@@ -123,6 +126,45 @@ namespace qaImageViewer
         private void ComboBox_FilePathProperty_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             LoadMainImage();
+        }
+
+        private void PopulateAttributesEditListBox()
+        {
+            DocumentListItem selected = (DocumentListItem)ListBox_ItemSelection.SelectedItem;
+            int selectionId = -1;
+            if (selected is not null) selectionId = selected.Id;
+            List<AttributeListItem> attributes = AttributeRepository.GetAllAttributeListItems(_connectionManager, selectionId, _resultSetId);
+            ListBox_AttributesEdit.ItemsSource = attributes;
+        }
+
+        private void Button_AddAttribute_Click(object sender, RoutedEventArgs e)
+        {
+            AddAttributeDialog addAttributeDialog = new AddAttributeDialog(_connectionManager);
+            addAttributeDialog.ShowDialog();
+            if (addAttributeDialog.DialogResult == true)
+            {
+                PopulateAttributesEditListBox();
+            }
+        }
+
+        private void ListBox_AttributesEdit_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            DocumentListItem selected = (DocumentListItem)ListBox_ItemSelection.SelectedItem;
+            if (selected is not null) {
+                try
+                {
+                    List<AttributeListItem> attributesToAdd = new List<AttributeListItem>();
+                    foreach (AttributeListItem item in ListBox_AttributesEdit.SelectedItems)
+                    {
+                        attributesToAdd.Add(item);
+                    }
+                    AttributeRepository.SaveAttributeAssignments(_connectionManager, selected.Id, _resultSetId, attributesToAdd);
+                } catch (Exception ex)
+                {
+                    LoggerService.LogError(ex.ToString());
+                    MessageBox.Show(ex.ToString());
+                }
+           }
         }
     }
 }
