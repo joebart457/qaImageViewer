@@ -30,13 +30,75 @@ namespace qaImageViewer
             _connectionManager = cm;
             _resultSetId = resultSetId;
 
-            SetupPropertyiewDataGridColumns();
+            SetupPropertyViewDataGridColumns();
             PopulateItemSelectionListBox();
             PopulateFilePathPropertyComboBox();
             SetupImageRotationComboBox();
             PopulateAttributesEditListBox();
+            SetupColumnFiltersDataGridColumns();
+            PopulateColumnFiltersDataGrid();
         }
 
+
+        private void PopulateColumnFiltersDataGrid()
+        {
+            MappingProfile profile = MappingProfileRepository.GetFullMappingProfileForResultSet(_connectionManager, _resultSetId);
+            if (profile is not null)
+            {
+                List<ColumnFilter> filters = new List<ColumnFilter>();
+                profile.ImportColumnMappings.ForEach(mapping =>
+                {
+                    filters.Add(
+                        new ColumnFilter {
+                            Mapping = ColumnMappingService.ConvertFromListItem(mapping),
+                            Filter = "%"
+                        }
+                    );
+                });
+                DataGrid_ColumnFilters.ItemsSource = filters;
+            }
+        }
+        private void SetupColumnFiltersDataGridColumns()
+        {
+            DataGrid_ColumnFilters.Columns.Clear();
+            DataGrid_ColumnFilters.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Param",
+                Binding = new Binding("Mapping.ColumnAlias"),
+                IsReadOnly = true
+            });
+
+            DataGrid_ColumnFilters.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Filter",
+                Binding = new Binding{Mode = BindingMode.TwoWay, Path = new PropertyPath("Filter")},
+                IsReadOnly = false
+            });
+
+            DataGrid_ColumnFilters.CellEditEnding += DataGrid_ColumnFilters_CellEditEnding;
+        }
+
+        private void DataGrid_ColumnFilters_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.EditAction == DataGridEditAction.Commit)
+            {
+                var column = e.Column as DataGridBoundColumn;
+                if (column != null)
+                {
+                    var bindingPath = (column.Binding as Binding).Path.Path;
+                    if (bindingPath == "Filter")
+                    {
+                        int rowIndex = e.Row.GetIndex();
+                        var el = e.EditingElement as TextBox;
+                        // rowIndex has the row index
+                        // bindingPath has the column's binding
+                        // el.Text has the new, user-entered value
+                        ((ColumnFilter)DataGrid_ColumnFilters.Items[rowIndex]).Filter = el.Text;
+                        PopulateItemSelectionListBox();
+                    }
+                }
+            }
+        }
 
         private void SetupImageRotationComboBox()
         {
@@ -45,11 +107,20 @@ namespace qaImageViewer
         }
         private void PopulateItemSelectionListBox()
         {
+            List<ColumnFilter> filters = new List<ColumnFilter>();
+            var items = DataGrid_ColumnFilters.ItemsSource;
+            if (items is not null)
+            {
+                foreach (ColumnFilter item in items)
+                {
+                    filters.Add(item);
+                }
+            }
             ListBox_ItemSelection.ItemsSource =
-                 ResultSetRepository.GetListItemsFromResultSet(_connectionManager, _resultSetId, new List<ColumnFilter>());
+                 ResultSetRepository.GetListItemsFromResultSet(_connectionManager, _resultSetId, filters);
         }
 
-        private void SetupPropertyiewDataGridColumns()
+        private void SetupPropertyViewDataGridColumns()
         {
             DataGrid_PropertyView.Columns.Clear();
             DataGrid_PropertyView.Columns.Add(new DataGridTextColumn

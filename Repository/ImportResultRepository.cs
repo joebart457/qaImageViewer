@@ -21,7 +21,8 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var selectImportResultCmd = conn.CreateCommand();
 
-                selectImportResultCmd.CommandText = @"SELECT id, profile_id, table_name, workbook_name, worksheet_name, datetime(end_time, 'unixepoch') FROM import_result WHERE id = @Id";
+                selectImportResultCmd.CommandText = @"SELECT id, profile_id, table_name, workbook_name, worksheet_name, datetime(end_time, 'unixepoch'), task_id
+                                                      FROM import_result WHERE id = @Id";
                 selectImportResultCmd.Parameters.Add(new SQLiteParameter("@Id", id));
 
                 var reader = selectImportResultCmd.ExecuteReader();
@@ -35,6 +36,7 @@ namespace qaImageViewer.Repository
                         WorkbookName = reader.GetString(3),
                         WorksheetName = reader.GetString(4),
                         EndTime = reader.GetDateTime(5),
+                        TaskId = reader.GetInt32(6)
                     });
                 }
 
@@ -59,7 +61,7 @@ namespace qaImageViewer.Repository
                 var selectImportResultCmd = conn.CreateCommand();
 
                 selectImportResultCmd.CommandText = @"SELECT ir.id, ir.profile_id, ir.table_name, ir.workbook_name,
-                                                        ir.worksheet_name, datetime(end_time, 'unixepoch'), mp.name
+                                                        ir.worksheet_name, datetime(end_time, 'unixepoch'), mp.name, ir.task_id
                                                     FROM import_result ir, mapping_profile mp WHERE mp.id = ir.profile_id";
 
                 var reader = selectImportResultCmd.ExecuteReader();
@@ -73,7 +75,8 @@ namespace qaImageViewer.Repository
                         WorkbookName = reader.GetString(3),
                         WorksheetName = reader.GetString(4),
                         EndTime = reader.GetDateTime(5),
-                        ProfileName = reader.GetString(6)
+                        ProfileName = reader.GetString(6),
+                        TaskId = reader.GetInt32(7)
                     });
                 }
 
@@ -94,8 +97,9 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var insertImportResultCmd = conn.CreateCommand();
 
-                insertImportResultCmd.CommandText = @"INSERT INTO import_result (profile_id, table_name, workbook_name, worksheet_name, end_time) 
-                                                    VALUES (@ProfileId, @TableName, @WorkbookName, @WorksheetName, strftime('%s', 'now'))";
+                insertImportResultCmd.CommandText = @"INSERT INTO import_result (task_id, profile_id, table_name, workbook_name, worksheet_name, end_time) 
+                                                    VALUES (@TaskId, @ProfileId, @TableName, @WorkbookName, @WorksheetName, strftime('%s', 'now'))";
+                insertImportResultCmd.Parameters.Add(new SQLiteParameter("@TaskId", importResults.TaskId));
                 insertImportResultCmd.Parameters.Add(new SQLiteParameter("@ProfileId", importResults.ProfileId));
                 insertImportResultCmd.Parameters.Add(new SQLiteParameter("@TableName", importResults.ResultTableName));
                 insertImportResultCmd.Parameters.Add(new SQLiteParameter("@WorkbookName", importResults.WorkbookName));

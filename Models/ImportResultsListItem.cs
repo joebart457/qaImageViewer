@@ -15,5 +15,11 @@ namespace qaImageViewer.Models
         public string WorkbookName { get; set; }
         public string WorksheetName { get; set; }
         public DateTime EndTime { get; set; }
+        public int TaskId { get; set; }
+
+        public override string ToString()
+        {
+            return $"{ProfileName} - {WorkbookName}:{WorksheetName} ({EndTime.ToString()})";
+        }
     }
 }

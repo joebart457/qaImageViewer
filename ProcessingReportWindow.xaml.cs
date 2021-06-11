@@ -23,12 +23,14 @@ namespace qaImageViewer
     {
 
         private int _resultSetId { get; set; }
+        private int _taskId { get; set; }
         private ConnectionManager _connectionManager { get; set; }
-        public ProcessingReportWindow(ConnectionManager cm, int resultSetId)
+        public ProcessingReportWindow(ConnectionManager cm, int resultSetId, int taskId)
         {
             InitializeComponent();
             _connectionManager = cm;
             _resultSetId = resultSetId;
+            _taskId = taskId;
 
             SetupProcessingExceptionDataGridColumns();
             SetupRowDataViewDataGridColumns();
@@ -65,7 +67,7 @@ namespace qaImageViewer
         private void PopulateProcessingExceptionsDataGrid()
         {
             DataGrid_ProcessingExceptions.ItemsSource = 
-                ProcessingExceptionRepository.GetProcessingExceptionListItemsByResultSetId(_connectionManager, _resultSetId);
+                ProcessingExceptionRepository.GetProcessingExceptionListItemsByTaskId(_connectionManager, _taskId);
         }
 
         private void PopulateRowSelectListBox()
@@ -88,6 +90,13 @@ namespace qaImageViewer
             {
                 Header = "Value",
                 Binding = new Binding("Value"),
+                IsReadOnly = true
+            });
+
+            DataGrid_RowDataView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Type",
+                Binding = new Binding("Mapping.ColumnType"),
                 IsReadOnly = true
             });
         }

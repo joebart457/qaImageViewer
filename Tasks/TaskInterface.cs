@@ -26,6 +26,8 @@ namespace qaImageViewer.Tasks
 
     interface TaskInterface
     {
-        void Execute(CallBack callback);
+        public int TaskId { get; set; }
+        void Execute(IProgress<int> progress, CallBack callback);
+        string GetTaskData();
     }
 }

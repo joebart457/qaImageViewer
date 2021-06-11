@@ -4,17 +4,18 @@ using qaImageViewer.Service;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace qaImageViewer.Tasks
 {
-    class ExcelImportItemsTask
+    class ExcelImportItemsTask: TaskInterface
     {
+        public int TaskId { get; set; }
         private ConnectionManager _connectionManager { get; set; }
         private int _mappingProfileId { get; set; }
         private MappingProfile _fullProfile;
@@ -22,6 +23,12 @@ namespace qaImageViewer.Tasks
         private int _sheetIndex { get; set; }
         private Excel.Worksheet _worksheet { get; set; }
         private int _batchSize { get; set; }
+
+        public string GetTaskData()
+        {
+            return "";
+        }
+
 
         public ExcelImportItemsTask(ConnectionManager connectionManager, string filename, int sheetIndex,
             int mappingProfileId, int batchSize)
@@ -99,7 +106,7 @@ namespace qaImageViewer.Tasks
             int resultSetId = 0;
             try
             {
-                resultSetId = ResultSetRepository.CreateResultSet(_connectionManager, _fullProfile, _filename, _worksheet.Name);
+                resultSetId = ResultSetRepository.CreateResultSet(_connectionManager, TaskId, _fullProfile, _filename, _worksheet.Name);
             } catch(Exception ex)
             {
                 string msg = $"Caught in ExcelImportItemsTask {ex.ToString()}";
@@ -151,9 +158,10 @@ namespace qaImageViewer.Tasks
                             new ProcessingExceptionListItem
                             {
                                 ResultSetId = resultSetId,
-                                RowIndex = rowIndex == null? i : rowIndex.GetValueOrDefault(), //If unable to grab row index,
-                                                                                               //just make best guess with i
-                                ErrorTrace = ex.ToString()
+                                RowIndex = rowIndex == null ? i : rowIndex.GetValueOrDefault(), //If unable to grab row index,
+                                                                                                //just make best guess with i
+                                ErrorTrace = ex.ToString(),
+                                Type = "IMPORT"
                             });
                     }
                     catch (Exception exception)

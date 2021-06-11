@@ -134,10 +134,12 @@ namespace qaImageViewer
                 var createProcessingExceptionTblCmd = _sqlConn.CreateCommand();
                 createProcessingExceptionTblCmd.CommandText = @"CREATE TABLE processing_exception (
                 	id	INTEGER NOT NULL,
-                    result_set_id INTEGER NOT NULL,
+                    task_id INTEGER,
+                    type TEXT,
+                    result_set_id INTEGER,
                     row_index INTEGER,
                 	error_trace	TEXT,
-                    error_time INTEGER NOT NULL,
+                    error_time INTEGER,
                 	PRIMARY KEY(id AUTOINCREMENT)
                 ); ";
 
@@ -146,6 +148,7 @@ namespace qaImageViewer
                 var createImportResultTblCmd = _sqlConn.CreateCommand();
                 createImportResultTblCmd.CommandText = @"CREATE TABLE import_result (
                 	id	INTEGER NOT NULL,
+                    task_id INTEGER NOT NULL,
                     profile_id INTEGER NOT NULL,
                 	table_name	TEXT NOT NULL,
                     workbook_name TEXT NOT NULL,
@@ -177,50 +180,19 @@ namespace qaImageViewer
 
                 createItemAttributeTblCmd.ExecuteNonQuery();
 
-                var createEntryTblCmd = _sqlConn.CreateCommand();
-                createEntryTblCmd.CommandText = @"CREATE TABLE entry (
+
+                var createAppTaskTblCmd = _sqlConn.CreateCommand();
+                createAppTaskTblCmd.CommandText = @"CREATE TABLE app_task (
                 	id	INTEGER NOT NULL,
-                	data	TEXT NOT NULL,
+                    type        TEXT NOT NULL,
+                    start_time INTEGER NOT NULL,
+                    update_time INTEGER NOT NULL,
+                    data TEXT,
+                	status INTEGER NOT NULL,
                 	PRIMARY KEY(id AUTOINCREMENT)
                 );";
 
-                createEntryTblCmd.ExecuteNonQuery();
-
-                var createEntryAttributeTblCmd = _sqlConn.CreateCommand();
-                createEntryAttributeTblCmd.CommandText = @"CREATE TABLE entry_attribute (
-                	id	INTEGER NOT NULL,
-                	entry_id	INTEGER NOT NULL,
-                    attribute_id	INTEGER NOT NULL,
-                    value           TEXT NOT NULL,
-                	PRIMARY KEY(id AUTOINCREMENT)
-                );";
-
-                createEntryAttributeTblCmd.ExecuteNonQuery();
-
-                var createInputMappingTblCmd = _sqlConn.CreateCommand();
-                createInputMappingTblCmd.CommandText = @"CREATE TABLE input_mapping (
-                	id	INTEGER NOT NULL,
-                	profile_id	INTEGER NOT NULL,
-                    attribute_id	INTEGER NOT NULL,
-                    column_code     TEXT NOT NULL,
-                    ignore          BOOLEAN DEFAULT FALSE,
-                	PRIMARY KEY(id AUTOINCREMENT)
-                );";
-
-                createInputMappingTblCmd.ExecuteNonQuery();
-
-
-                var createOutputMappingTblCmd = _sqlConn.CreateCommand();
-                createOutputMappingTblCmd.CommandText = @"CREATE TABLE output_mapping (
-                	id	INTEGER NOT NULL,
-                	profile_id	INTEGER NOT NULL,
-                    attribute_id	INTEGER NOT NULL,
-                    column_code     TEXT NOT NULL,
-                    ignore          BOOLEAN DEFAULT FALSE,
-                	PRIMARY KEY(id AUTOINCREMENT)
-                );";
-
-                createOutputMappingTblCmd.ExecuteNonQuery();
+                createAppTaskTblCmd.ExecuteNonQuery();
 
                 SetApplicationSettings();
             }

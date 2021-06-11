@@ -53,7 +53,7 @@ namespace qaImageViewer.Repository
             return result;
         }
 
-        public static int CreateResultSet(ConnectionManager cm, MappingProfile mapping, string workbookName, string worksheetName)
+        public static int CreateResultSet(ConnectionManager cm, int taskId, MappingProfile mapping, string workbookName, string worksheetName)
         {
             try
             { 
@@ -66,6 +66,7 @@ namespace qaImageViewer.Repository
                 // needs refactor
                 ImportResultRepository.InsertImportResult(cm, new ImportResults
                 {
+                    TaskId = taskId,
                     ResultTableName = nextResultTableName,
                     ProfileId = mapping.Id,
                     WorkbookName = workbookName,
@@ -268,11 +269,12 @@ namespace qaImageViewer.Repository
                 {
                     string filterParameterName = $"@{filters[i].Mapping.ColumnName}Filter";
                     whereClause += (i > 0 ? " AND " : "") + $"{filters[i].Mapping.ColumnName} like {filterParameterName}";
-                    selectResultSetCmd.Parameters.Add(new SQLiteParameter(filterParameterName, $"{filters[i].Filter}%"));
+                    selectResultSetCmd.Parameters.Add(new SQLiteParameter(filterParameterName, $"{filters[i].Filter}"));
                 }
             }
 
             selectResultSetCmd.CommandText = $"SELECT {columnsToSelect} FROM {resultTableName} {whereClause}";
+            LoggerService.LogError($"SELECT {columnsToSelect} FROM {resultTableName} {whereClause}");
             return selectResultSetCmd;
         }
 
@@ -306,15 +308,6 @@ namespace qaImageViewer.Repository
                         Columns = new List<DocumentColumn>()
                     };
 
-                    for (int i = 0; i < profile.ImportColumnMappings.Count; i++)
-                    {
-                        docToAdd.Columns.Add(new DocumentColumn
-                        {
-                            Mapping = ColumnMappingService.ConvertFromListItem(profile.ImportColumnMappings[i]),
-                            Value = reader.GetValue(i + 1)
-                        });
-                        
-                    }
                     docResults.Add(docToAdd);
                 }
 
@@ -326,6 +319,8 @@ namespace qaImageViewer.Repository
                 throw ex;
             }
         }
+
+
 
         public static List<DocumentListItem> GetListItemsFromResultSet(ConnectionManager cm, int importResultId, List<ColumnFilter> filters)
         {
@@ -408,9 +403,8 @@ namespace qaImageViewer.Repository
                         doc.Columns.Add(new DocumentColumn
                         {
                             Mapping = ColumnMappingService.ConvertFromListItem(profile.ImportColumnMappings[i]),
-                            Value = reader.GetValue(i + 1)
+                            Value = profile.ImportColumnMappings[i].ColumnType == DBColumnType.DATE? reader.GetDateTime(i+1) : reader.GetValue(i + 1)
                         });
-
                     }
 
                     return doc.Columns;
@@ -425,6 +419,36 @@ namespace qaImageViewer.Repository
             }
         }
 
+        public static int GetResultSetSize(ConnectionManager cm, int importResultId)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+
+                var conn = cm.GetSQLConnection();
+
+                ImportResults res = ImportResultRepository.GetImportResult(cm, importResultId);
+                if (res is null)
+                {
+                    throw new Exception($"unable to find result set with id {importResultId}");
+                }
+
+                string resultTableName = res.ResultTableName;
+
+
+                var countEntriesCmd = conn.CreateCommand();
+                countEntriesCmd.CommandText = $"SELECT COUNT(*) from {resultTableName}";
+
+                var count = countEntriesCmd.ExecuteScalar();
+                if (count is null) return -1;
+                return Convert.ToInt32(count);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
 
     }
 }

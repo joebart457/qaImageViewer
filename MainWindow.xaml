@@ -76,6 +76,43 @@
                     </GroupBox>
                 </Grid>
             </TabItem>
+            <TabItem Header="Export">
+                <Grid>
+                    <GroupBox Header="Export Options" Margin="113,24,113,239" BorderBrush="#FF067CC3">
+                        <Grid>
+                            <ComboBox x:Name="ComboBox_ExportType" Text="--Select--" HorizontalAlignment="Left" Margin="31,27,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ExportType_SelectionChanged"/>
+                            <GroupBox x:Name="GroupBox_NewFileOptions" Header="New File Options" Margin="34,78,44,330">
+                                <Grid>
+                                    <TextBox x:Name="TextBox_ExportFileName" HorizontalAlignment="Left" Margin="89,19,0,0" Text="--Export File--" TextWrapping="Wrap" VerticalAlignment="Top" Width="522"/>
+                                    <Label Content="File name:" HorizontalAlignment="Left" Margin="21,15,0,0" VerticalAlignment="Top"/>
+                                </Grid>
+                            </GroupBox>
+                            <GroupBox x:Name="GroupBox_OverlayOptions" Header="Overlay Options" Margin="34,173,44,186">
+                                <Grid>
+                                    <Button x:Name="Button_ChooseExportFile" Content="Select File" HorizontalAlignment="Left" Margin="21,22,0,0" VerticalAlignment="Top" Click="Button_ChooseExportFile_Click" Width="81"/>
+                                    <Label x:Name="Label_ExportFileName" Content="--Select File--" HorizontalAlignment="Left" Margin="140,19,0,0" VerticalAlignment="Top" Width="525"/>
+                                    <ComboBox x:Name="ComboBox_ExportSheetNames" HorizontalAlignment="Left" Margin="140,64,0,0" VerticalAlignment="Top" Width="232"/>
+                                    <Label Content="Target Sheet:" HorizontalAlignment="Left" Margin="21,57,0,0" VerticalAlignment="Top" Width="81"/>
+                                </Grid>
+                            </GroupBox>
+                            <GroupBox x:Name="GroupBox_AttributeExportOptions" Header="Attribute Export Options" Margin="34,328,44,51">
+                                <Grid>
+                                    <ComboBox x:Name="ComboBox_AttributeExportMode" HorizontalAlignment="Left" Margin="68,24,0,0" VerticalAlignment="Top" Width="136" SelectionChanged="ComboBox_AttributeExportMode_SelectionChanged"/>
+                                    <ComboBox x:Name="ComboBox_AttributeExportTarget" HorizontalAlignment="Left" Margin="325,24,0,0" VerticalAlignment="Top" Width="86"/>
+                                    <Label Content="Type:" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top"/>
+                                    <Label Content="Target Column:" HorizontalAlignment="Left" Margin="227,20,0,0" VerticalAlignment="Top"/>
+                                </Grid>
+                            </GroupBox>
+                            <Button x:Name="Button_StartExport" Content="Start Export" HorizontalAlignment="Left" Margin="828,451,0,0" VerticalAlignment="Top" Click="Button_StartExport_Click" Width="80"/>
+                            <ComboBox x:Name="ComboBox_ExportResultSetTarget" HorizontalAlignment="Left" Margin="510,37,0,0" VerticalAlignment="Top" Width="402"/>
+                            <CheckBox x:Name="CheckBox_TrySave" Content="Automatically Save Workbook" HorizontalAlignment="Left" Margin="635,453,0,0" VerticalAlignment="Top"/>
+                        </Grid>
+                    </GroupBox>
+                    <ProgressBar x:Name="ProgressBar_ExportTaskStatus" HorizontalAlignment="Left" Height="38" Margin="338,606,0,0" VerticalAlignment="Top" Width="388"/>
+                    <Label x:Name="Label_ExportStatus" Content="Idle." HorizontalAlignment="Left" Margin="411,649,0,0" VerticalAlignment="Top" FlowDirection="RightToLeft" Width="315"/>
+                    <Button x:Name="Button_ViewExportProcessingReport" IsEnabled="False" Content="View Processing Report" HorizontalAlignment="Left" Margin="784,600,0,0" VerticalAlignment="Top" Click="Button_ViewExportProcessingReport_Click"/>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

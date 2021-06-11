@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using qaImageViewer.Converters;
+using qaImageViewer.Managers;
 using qaImageViewer.Models;
 using qaImageViewer.Repository;
 using qaImageViewer.Service;
@@ -36,10 +37,10 @@ namespace qaImageViewer
         private ConnectionManager _connectionManager = null;
         private ProcessingReportWindow _processingReportWindow = null;
         private ImageViewer _imageViewerWindow = null;
+        private int? _recentExportId = null; // Refactor 
         public MainWindow()
         {
             InitializeComponent();
-
 
             try
             {
@@ -50,6 +51,9 @@ namespace qaImageViewer
                 SetupExportColumnMappingsEditColumns();
                 SetupPreviousImportResultsDataGrid();
                 PopulateImportProfilesComboBox();
+                PopulateExportTypeComboBox();
+                PopulateAttributeExportModeComboBox();
+                PopulateAttributeExportTargetComboBox();
                 HideExcelPreviewStatusLabels();
                 ResetExcelPreviewData();
             } catch (Exception ex)
@@ -59,7 +63,28 @@ namespace qaImageViewer
             }
         }
 
+        private void PopulateExportResultSetTargetComboBox()
+        {
+            ComboBox_ExportResultSetTarget.ItemsSource = ImportResultRepository.GetImportResultListItems(_connectionManager);
+        }
 
+        private void PopulateAttributeExportTargetComboBox()
+        {
+            ComboBox_AttributeExportTarget.ItemsSource = ExcelAppHelperService.GetExcelColumnOptionsAsList(false, false);
+            ComboBox_AttributeExportTarget.SelectedItem = "A";
+        }
+
+        private void PopulateAttributeExportModeComboBox()
+        {
+            ComboBox_AttributeExportMode.ItemsSource = Enum.GetValues(typeof(AttributeExportMode));
+            ComboBox_AttributeExportMode.SelectedItem = AttributeExportMode.First;
+        }
+
+        private void PopulateExportTypeComboBox()
+        {
+            ComboBox_ExportType.ItemsSource = Enum.GetValues(typeof(ExportType));
+            ComboBox_ExportType.SelectedItem = ExportType.NewFile;
+        }
         private void PopulateImportProfilesComboBox()
         {
             ComboBox_ImportProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
@@ -111,7 +136,7 @@ namespace qaImageViewer
             });
             
             var excelColumnAliasComboBoxTemplate = new FrameworkElementFactory(typeof(ComboBox));
-            excelColumnAliasComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, ExcelAppHelperService.GetExcelColumnOptionsAsList(true));
+            excelColumnAliasComboBoxTemplate.SetValue(ComboBox.ItemsSourceProperty, ExcelAppHelperService.GetExcelColumnOptionsAsList(true, true));
             excelColumnAliasComboBoxTemplate.SetBinding(ComboBox.SelectedItemProperty, new Binding("ExcelColumnAlias"));
             excelColumnAliasComboBoxTemplate.AddHandler(
                 ComboBox.SelectionChangedEvent,
@@ -405,23 +430,35 @@ namespace qaImageViewer
                         PopulateMappingProfilesImportViewComboBox();
                         PopulatePreviousImportResultsDataGrid();
                     }
-                    
+                    if (tab.Header.ToString() == "Export")
+                    {
+                        PopulateExportResultSetTargetComboBox();
+                    }
+
                 }
             }
            
         }
 
-        private void Button_SelectExcelTargetFile_Click(object sender, RoutedEventArgs e)
+        private string? ChooseExcelFile()
         {
             Microsoft.Win32.OpenFileDialog fileDialog = new Microsoft.Win32.OpenFileDialog();
             fileDialog.DefaultExt = ".xls|.xlsx";
-            fileDialog.Filter = "(.xls)|*.xls|(.xlsx)|*.xlsx";
+            fileDialog.Filter = "(.xlsx)|*.xlsx|(.xls)|*.xls";
             Nullable<bool> isFileChosen = fileDialog.ShowDialog();
             if (isFileChosen == true)
             {
+                return fileDialog.FileName;
+            }
+            return null;
+        }
 
-                LoadExcelPreview(fileDialog.FileName);
-
+        private void Button_SelectExcelTargetFile_Click(object sender, RoutedEventArgs e)
+        {
+            string? fileName = ChooseExcelFile();
+            if (fileName is not null)
+            {
+                LoadExcelPreview(fileName);
             }
         }
 
@@ -594,14 +631,13 @@ namespace qaImageViewer
             });
             try
             {
-                await Task.Run(() => { excelImportItemsTask.Execute(progress, () => { }); });
+                await TaskManager.Launch(_connectionManager, excelImportItemsTask, progress);
                 Button_RunExcelImport.IsEnabled = true;
                 Label_ImportStatus.Content = "Done";
                 PopulatePreviousImportResultsDataGrid();
             } catch (Exception ex)
             {
-                LoggerService.LogError(ex.ToString());
-                MessageBox.Show("Unable to complete import task. See logs for details", "Error");
+                MessageBox.Show(ex.ToString(), "Import Task Failed");
                 Button_RunExcelImport.IsEnabled = true;
                 Label_ImportStatus.Content = "Done";
             }
@@ -614,12 +650,12 @@ namespace qaImageViewer
             {
                 if (_processingReportWindow == null || _processingReportWindow.IsLoaded == false)
                 {
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id, selectedResults.TaskId);
                     _processingReportWindow.Show();
                 } else
                 {
                     _processingReportWindow.Close();
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id, selectedResults.TaskId);
                     _processingReportWindow.Show();
                 }
             }
@@ -646,6 +682,200 @@ namespace qaImageViewer
                     _imageViewerWindow.Close();
                     _imageViewerWindow = new ImageViewer(_connectionManager, selectedResults.Id);
                     _imageViewerWindow.Show();
+                }
+            }
+        }
+
+        private void Button_ChooseExportFile_Click(object sender, RoutedEventArgs e)
+        {
+            string? fileName = ChooseExcelFile();
+            if (fileName is not null)
+            {
+                PopulateExportSheetNamesComboBox(fileName);
+            }
+        }
+
+        private async void PopulateExportSheetNamesComboBox(string filename)
+        {
+            Button_ChooseExportFile.IsEnabled = false;
+            ComboBox_ExportSheetNames.Items.Clear();
+            try
+            {
+                Excel.Application xlApp = null;
+                Excel.Workbook workbook = await Task.Run(() =>
+                {
+                    xlApp = new Excel.Application();
+                    return xlApp.Workbooks.Open(filename, ReadOnly: true);
+                });
+
+                int id;
+                // Find the excel process id
+                Utilities.GetWindowThreadProcessId(xlApp.Hwnd, out id);
+                Process excelProcess = Process.GetProcessById(id);
+
+                Label_ExportFileName.Content = filename;
+
+
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    ComboBox_ExportSheetNames.Items.Add(new ExcelWorksheetListItem
+                    {
+
+                        Name = ((Excel.Worksheet)workbook.Worksheets[i]).Name,
+                        UsedRowCount = ((Excel.Worksheet)workbook.Worksheets[i]).UsedRange.Rows.Count,
+                        WorkbookPath = filename,
+                        SheetIndex = i,
+                    });
+                }
+
+                workbook.Close();
+                if (xlApp is not null) xlApp.Quit();
+                excelProcess.Kill();
+                Utilities.ReleaseObject(workbook);
+                Utilities.ReleaseObject(xlApp);
+            } catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                MessageBox.Show(ex.ToString());
+            }
+            Button_ChooseExportFile.IsEnabled = true;
+        }
+
+        private void ComboBox_AttributeExportMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ComboBox_AttributeExportMode.SelectedItem is null || 
+                Enum.IsDefined(typeof(AttributeExportMode), ComboBox_AttributeExportMode.SelectedItem) 
+                && (AttributeExportMode)ComboBox_AttributeExportMode.SelectedItem == AttributeExportMode.None)
+            {
+                ComboBox_AttributeExportTarget.IsEnabled = false;
+            } else
+            {
+                ComboBox_AttributeExportTarget.IsEnabled = true;
+            }
+        }
+
+        private void ComboBox_ExportType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Enum.IsDefined(typeof(ExportType), ComboBox_ExportType.SelectedItem))
+            {
+                ExportType exportType = (ExportType)ComboBox_ExportType.SelectedItem;
+                if (exportType == ExportType.NewFile)
+                {
+                    GroupBox_NewFileOptions.IsEnabled = true;
+                    GroupBox_OverlayOptions.IsEnabled = false;
+                    CheckBox_TrySave.IsChecked = true;
+                } else
+                {
+                    GroupBox_NewFileOptions.IsEnabled = false;
+                    GroupBox_OverlayOptions.IsEnabled = true;
+                }
+            } else
+            {
+                GroupBox_NewFileOptions.IsEnabled = false;
+                GroupBox_OverlayOptions.IsEnabled = false;
+            }
+        }
+
+        private async void Button_StartExport_Click(object sender, RoutedEventArgs e)
+        {
+            Button_StartExport.IsEnabled = false;
+            Button_ViewExportProcessingReport.IsEnabled = false;
+            try
+            {
+                if (!Enum.IsDefined(typeof(ExportType), ComboBox_ExportType.SelectedItem))
+                {
+                    MessageBox.Show("Please select a valid export type");
+                    Button_StartExport.IsEnabled = true;
+                    return;
+                }
+
+
+                ExportType exportType = (ExportType)ComboBox_ExportType.SelectedItem;
+                string filename = exportType == ExportType.NewFile ? TextBox_ExportFileName.Text.Trim() : Label_ExportFileName.Content.ToString().Trim();
+
+                if (filename.Length <= 0)
+                {
+                    MessageBox.Show("Please enter valid filename");
+                    Button_StartExport.IsEnabled = true;
+                    return;
+                }
+
+                ImportResultsListItem importResults = (ImportResultsListItem)ComboBox_ExportResultSetTarget.SelectedItem;
+                if (importResults is null)
+                {
+                    MessageBox.Show("Please select result set to export");
+                    Button_StartExport.IsEnabled = true;
+                    return;
+                }
+
+                int sheetIndex = -1;
+                if ((ExcelWorksheetListItem)ComboBox_ExportSheetNames.SelectedItem is not null)
+                {
+                    sheetIndex = ((ExcelWorksheetListItem)ComboBox_ExportSheetNames.SelectedItem).SheetIndex;
+                }
+
+                AttributeExportMode attributeExportMode = Enum.IsDefined(typeof(AttributeExportMode), ComboBox_AttributeExportMode.SelectedItem) ?
+                    (AttributeExportMode)ComboBox_AttributeExportMode.SelectedItem : AttributeExportMode.None;
+
+
+                if (attributeExportMode != AttributeExportMode.None && ComboBox_AttributeExportTarget.SelectedItem is null)
+                {
+                    MessageBox.Show("Please select attribute export column target");
+                    return;
+                }
+
+                string attributeExportTarget = ComboBox_AttributeExportTarget.SelectedItem.ToString();
+
+                bool? trySave = CheckBox_TrySave.IsChecked;
+
+                int progressMaxCount = ResultSetRepository.GetResultSetSize(_connectionManager, importResults.Id);
+
+                ExcelExportItemsTask exportTask = new ExcelExportItemsTask(
+                    _connectionManager,
+                    exportType,
+                    filename,
+                    sheetIndex,
+                    importResults.ProfileId,
+                    importResults.Id,
+                    attributeExportMode,
+                    attributeExportTarget,
+                    trySave is null || trySave == false? false : true
+                );
+
+                ProgressBar_ExportTaskStatus.Maximum = progressMaxCount;
+                ProgressBar_ExportTaskStatus.Value = 0;
+
+                IProgress<int> progress = new Progress<int>(value =>
+                {
+                    ProgressBar_ExportTaskStatus.Value = value;
+                    Label_ExportStatus.Content = $"exporting row {value.ToString()} of {ProgressBar_ExportTaskStatus.Maximum.ToString()}";
+                });
+
+                _recentExportId = await TaskManager.Launch(_connectionManager, exportTask, progress);
+            } catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Export failed");
+            }
+
+            Button_StartExport.IsEnabled = true;
+            Button_ViewExportProcessingReport.IsEnabled = true;
+            Label_ExportStatus.Content = "Idle";
+        }
+
+        private void Button_ViewExportProcessingReport_Click(object sender, RoutedEventArgs e)
+        {
+            if (_recentExportId != null)
+            {
+                if (_processingReportWindow == null || _processingReportWindow.IsLoaded == false)
+                {
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, -1, _recentExportId.Value);
+                    _processingReportWindow.Show();
+                }
+                else
+                {
+                    _processingReportWindow.Close();
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, -1, _recentExportId.Value);
+                    _processingReportWindow.Show();
                 }
             }
         }

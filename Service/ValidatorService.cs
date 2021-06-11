@@ -30,6 +30,17 @@ namespace qaImageViewer.Service
             return true;
         }
 
+        public static bool ValidateSingleColumnOrRowIdOrIgnoreOption(string text, int maxColumnAliasLength = 3)
+        {
+            if (text == ExcelAppHelperService.ROWID_OPTION || text == ExcelAppHelperService.ROWID_OPTION) return true;
+            if (text.Length > maxColumnAliasLength || text.Length == 0) return false;
+            foreach (Char c in text)
+            {
+                if (!Char.IsLetter(c)) { return false; }
+            }
+            return true;
+        }
+
         public static bool ValidateColumnFormat(string str)
         {
             string[] columnRanges = str.Split(',');

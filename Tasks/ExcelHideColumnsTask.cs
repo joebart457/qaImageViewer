@@ -9,7 +9,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 
 namespace qaImageViewer.Tasks
 {
-    class ExcelHideColumnsTask: TaskInterface
+    class ExcelHideColumnsTask
     {
         private Excel.Workbook _activeWB { get; set; }
         private Excel.Worksheet _activeSheet { get; set; }

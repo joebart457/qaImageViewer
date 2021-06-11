@@ -11,6 +11,47 @@ namespace qaImageViewer.Repository
 {
     class AttributeRepository
     {
+
+
+        public static List<AttributeListItem> GetAssignedAttributes(ConnectionManager cm, int itemId, int resultSetId)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+
+                List<AttributeListItem> results = new List<AttributeListItem>();
+                var conn = cm.GetSQLConnection();
+                var selectAttributesCmd = conn.CreateCommand();
+
+                selectAttributesCmd.CommandText = @"SELECT a.id, a.name, 
+                                                        CASE WHEN ia.id is NULL THEN False ELSE True End as 'Assigned'
+                                                    FROM attribute a, item_attribute ia
+                                                    WHERE ia.attribute_id = a.id
+                                                        AND ia.item_id=@ItemId
+                                                        AND ia.result_set_id=@ResultSetId";
+                selectAttributesCmd.Parameters.Add(new SQLiteParameter("@ItemId", itemId));
+                selectAttributesCmd.Parameters.Add(new SQLiteParameter("@ResultSetId", resultSetId));
+
+                var reader = selectAttributesCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    results.Add(new AttributeListItem
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        IsAssigned = reader.GetBoolean(2),
+                        ResultSetId = resultSetId
+                    });
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
         public static List<AttributeListItem> GetAllAttributeListItems(ConnectionManager cm, int itemId, int resultSetId)
         {
             try
