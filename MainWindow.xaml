@@ -5,64 +5,42 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:qaImageViewer"
         mc:Ignorable="d"
-        Title="MainWindow" SizeToContent="WidthAndHeight">
+        Title="MainWindow" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
     <Grid Height="800" Width="1200">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="197*"/>
-            <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
         <TabControl AutomationProperties.Name="TabControl_MainNavigation" SelectionChanged="TabControl_SelectionChanged" Grid.ColumnSpan="2">
-            <TabItem Header="View">
-                <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="21*"/>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="77*"/>
-                        <ColumnDefinition Width="52*"/>
-                        <ColumnDefinition Width="1029*"/>
-                    </Grid.ColumnDefinitions>
-                    <Image HorizontalAlignment="Left" Height="522" Margin="46,136,0,0" VerticalAlignment="Top" Width="679" Grid.Column="3" Grid.ColumnSpan="2"/>
-                    <ListView Margin="740,165,45,150" Grid.Column="4">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn/>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                    <Button Content="+" HorizontalAlignment="Left" Margin="962,136,0,0" VerticalAlignment="Top" Height="24" Width="28" Grid.Column="4"/>
-
-                </Grid>
-            </TabItem>
             <TabItem Header="Mapping Profiles" AutomationProperties.Name="TabItem_ImportProfiles">
-                <Grid Background="#FFE5E5E5" AutomationProperties.Name="TabContainer_ImportProfiles">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="38*"/>
-                        <ColumnDefinition Width="559*"/>
-                    </Grid.ColumnDefinitions>
-                    <Rectangle HorizontalAlignment="Left" Height="667" Margin="20,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.ColumnSpan="2"/>
-                    <DataGrid x:Name="DataGrid_ImportColumnMappingsEdit" AutoGenerateColumns="False" Margin="60,81,746,77" GridLinesVisibility="All" AutomationProperties.Name="DataGrid_ImportColumnMappingsEdit" CanUserAddRows="False" CanUserDeleteRows="False" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
-                    <Button x:Name="Button_AddColumnMapping" Content="+Row" HorizontalAlignment="Left" Margin="321,46,0,0" VerticalAlignment="Top" AutomationProperties.Name="Button_AddColumnMapping" Width="51" Grid.Column="1" Click="Button_AddColumnMapping_Click"/>
+                <Grid x:Name="Grid_MappingProfilesTab" Background="#FFE5E5E5" AutomationProperties.Name="TabContainer_ImportProfiles">
+                    <Rectangle x:Name="Rectange_ImportMappingBorder" HorizontalAlignment="Left" Height="667" Margin="20,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.ColumnSpan="2"/>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsEdit" AutoGenerateColumns="False" Margin="60,81,746,101" GridLinesVisibility="All" AutomationProperties.Name="DataGrid_ImportColumnMappingsEdit" CanUserAddRows="False" CanUserDeleteRows="False" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
+                    <Button x:Name="Button_AddColumnMapping" Content="+Row" HorizontalAlignment="Left" Margin="413,46,0,0" VerticalAlignment="Top" AutomationProperties.Name="Button_AddColumnMapping" Width="51" Click="Button_AddColumnMapping_Click" BorderBrush="#FF39DCD5" Foreground="#FFFDFDFD" Background="#FF1C55F0">
+                        <Button.OpacityMask>
+                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                <GradientStop Color="Black"/>
+                                <GradientStop Color="#FFF91616" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.OpacityMask>
+                    </Button>
                     <ComboBox x:Name="ComboBox_ImportProfilesSelector" Text="--Select Profile--" IsEditable="True" HorizontalAlignment="Left" Margin="38,43,0,0" VerticalAlignment="Top" Width="182" SelectionChanged="ComboBox_ImportProfilesSelector_SelectionChanged" KeyUp="ComboBox_ImportProfilesSelector_KeyUp" IsTextSearchEnabled="False" Height="26" Grid.ColumnSpan="2"/>
-                    <Button x:Name="Button_SaveImportProfile" Content="+" Grid.Column="1" IsEnabled="False" HorizontalAlignment="Left" Margin="144,43,0,0" VerticalAlignment="Top" Click="Button_SaveImportProfile_Click" Height="26" Width="22"/>
-                    <DataGrid x:Name="DataGrid_ImportColumnMappingsView" Margin="60,81,746,77" GridLinesVisibility="All" AutomationProperties.Name="Table_ColumnMappings" IsReadOnly="True" Grid.ColumnSpan="2" />
-                    <Rectangle HorizontalAlignment="Left" Height="667" Margin="624,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.Column="1"/>
-                    <DataGrid x:Name="DataGrid_ExportColumnMappingsEdit" Margin="665,81,65,77" Grid.Column="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
+                    <Button x:Name="Button_SaveImportProfile" Content="+" IsEnabled="False" HorizontalAlignment="Left" Margin="219,43,0,0" VerticalAlignment="Top" Click="Button_SaveImportProfile_Click" Height="26" Width="22"/>
+                    <DataGrid x:Name="DataGrid_ImportColumnMappingsView" Margin="60,81,746,101" GridLinesVisibility="All" AutomationProperties.Name="Table_ColumnMappings" IsReadOnly="True" />
+                    <Rectangle x:Name="Rectange_ExportMappingBorder" HorizontalAlignment="Left" Height="667" Margin="624,30,0,0" Stroke="Black" VerticalAlignment="Top" Width="470" Grid.Column="1"/>
+                    <DataGrid x:Name="DataGrid_ExportColumnMappingsEdit" Margin="665,81,132,101" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" HorizontalContentAlignment="Stretch" ColumnWidth="*"/>
                     <Label Content="Export Mapping" Grid.Column="1" HorizontalAlignment="Left" Margin="648,41,0,0" VerticalAlignment="Top" Height="34" Width="109" FontSize="14"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Import">
-                <Grid Background="#FFE5E5E5">
-                    <GroupBox Header="Import Results" Margin="36,502,30,26">
+                <Grid x:Name="Grid_ImportTab" Background="#FFE5E5E5">
+                    <GroupBox x:Name="GroupBox_ImportResults" Header="Import Results" Margin="36,502,30,26">
                         <Grid Height="211">
                             <DataGrid x:Name="DataGrid_PreviousImportResults" Margin="15,10,15,35" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" IsReadOnly="True" SelectionChanged="DataGrid_PreviousImportResults_SelectionChanged"/>
-                            <Button x:Name="Button_RouteToResults" Content=" View Processing Report" HorizontalAlignment="Left" Margin="970,191,0,0" VerticalAlignment="Top" Click="Button_RouteToResults_Click" IsEnabled="False"/>
-                            <Button x:Name="Button_RouteToReviewWindow" Content="View Results" HorizontalAlignment="Left" Margin="889,191,0,0" VerticalAlignment="Top" IsEnabled="False" Click="Button_RouteToReviewWindow_Click"/>
+                            <Button x:Name="Button_RouteToResults" Content=" View Processing Report" HorizontalAlignment="Left" Margin="964,184,0,0" VerticalAlignment="Top" Click="Button_RouteToResults_Click" IsEnabled="False" Height="24" Width="137"/>
+                            <Button x:Name="Button_RouteToReviewWindow" Content="View Results" HorizontalAlignment="Left" Margin="849,184,0,0" Height="24" VerticalAlignment="Top" IsEnabled="False" Click="Button_RouteToReviewWindow_Click" Width="83"/>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Header="Import" Margin="36,10,30,275">
+                    <GroupBox x:Name="GroupBox_Import" Header="Import" Margin="36,10,30,275">
                         <Grid>
                             <ComboBox x:Name="ComboBox_MappingProfilesSelector" HorizontalAlignment="Left" Margin="23,404,0,0" VerticalAlignment="Top" Width="212"/>
-                            <Button x:Name="Button_RunExcelImport" Content="Import" HorizontalAlignment="Left" Margin="249,404,0,0" VerticalAlignment="Top" Click="Button_RunExcelImport_Click" Width="54"/>
+                            <Button x:Name="Button_RunExcelImport" Content="Import" HorizontalAlignment="Left" Margin="249,404,0,0" VerticalAlignment="Top" Click="Button_RunExcelImport_Click" Width="65" Height="24"/>
                             <ProgressBar x:Name="ProgressBar_ExcelImportItemsTask" HorizontalAlignment="Left" Height="22" Margin="335,406,0,0" VerticalAlignment="Top" Width="688"/>
                             <Button x:Name="Button_SelectExcelTargetFile" Content="Choose" HorizontalAlignment="Left" Margin="23,12,0,0" VerticalAlignment="Top" Click="Button_SelectExcelTargetFile_Click" Width="74"/>
                             <Label x:Name="Label_ExcelWorkbookName" Content="--Select File--" HorizontalAlignment="Left" Margin="119,9,0,0" VerticalAlignment="Top" Width="959"/>
@@ -77,8 +55,8 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Export">
-                <Grid>
-                    <GroupBox Header="Export Options" Margin="113,24,113,239" BorderBrush="#FF067CC3">
+                <Grid x:Name="Grid_ExportTab">
+                    <GroupBox x:Name="GroupBox_ExportOptions" Header="Export Options" Margin="113,24,113,239" BorderBrush="#FF067CC3" Grid.ColumnSpan="2">
                         <Grid>
                             <ComboBox x:Name="ComboBox_ExportType" Text="--Select--" HorizontalAlignment="Left" Margin="31,27,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ExportType_SelectionChanged"/>
                             <GroupBox x:Name="GroupBox_NewFileOptions" Header="New File Options" Margin="34,78,44,330">
@@ -91,26 +69,45 @@
                                 <Grid>
                                     <Button x:Name="Button_ChooseExportFile" Content="Select File" HorizontalAlignment="Left" Margin="21,22,0,0" VerticalAlignment="Top" Click="Button_ChooseExportFile_Click" Width="81"/>
                                     <Label x:Name="Label_ExportFileName" Content="--Select File--" HorizontalAlignment="Left" Margin="140,19,0,0" VerticalAlignment="Top" Width="525"/>
-                                    <ComboBox x:Name="ComboBox_ExportSheetNames" HorizontalAlignment="Left" Margin="140,64,0,0" VerticalAlignment="Top" Width="232"/>
-                                    <Label Content="Target Sheet:" HorizontalAlignment="Left" Margin="21,57,0,0" VerticalAlignment="Top" Width="81"/>
+                                    <ComboBox x:Name="ComboBox_ExportSheetNames" HorizontalAlignment="Left" Margin="140,64,0,0" VerticalAlignment="Top" Width="232" Background="#FF69E422"/>
+                                    <Label Content="Target Sheet:" HorizontalAlignment="Left" Margin="21,62,0,0" VerticalAlignment="Top" Width="81"/>
                                 </Grid>
                             </GroupBox>
                             <GroupBox x:Name="GroupBox_AttributeExportOptions" Header="Attribute Export Options" Margin="34,328,44,51">
                                 <Grid>
                                     <ComboBox x:Name="ComboBox_AttributeExportMode" HorizontalAlignment="Left" Margin="68,24,0,0" VerticalAlignment="Top" Width="136" SelectionChanged="ComboBox_AttributeExportMode_SelectionChanged"/>
-                                    <ComboBox x:Name="ComboBox_AttributeExportTarget" HorizontalAlignment="Left" Margin="325,24,0,0" VerticalAlignment="Top" Width="86"/>
+                                    <ComboBox x:Name="ComboBox_AttributeExportTarget" HorizontalAlignment="Left" Margin="325,24,0,0" VerticalAlignment="Top" Width="86" BorderBrush="#FF5CE64E" Foreground="#FF611616">
+                                        <ComboBox.Background>
+                                            <LinearGradientBrush EndPoint="0,1">
+                                                <GradientStop Color="#FFF0F0F0"/>
+                                                <GradientStop Color="#FF2663AC" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </ComboBox.Background>
+                                    </ComboBox>
                                     <Label Content="Type:" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top"/>
                                     <Label Content="Target Column:" HorizontalAlignment="Left" Margin="227,20,0,0" VerticalAlignment="Top"/>
                                 </Grid>
                             </GroupBox>
-                            <Button x:Name="Button_StartExport" Content="Start Export" HorizontalAlignment="Left" Margin="828,451,0,0" VerticalAlignment="Top" Click="Button_StartExport_Click" Width="80"/>
+                            <Button x:Name="Button_StartExport" Content="Start Export" HorizontalAlignment="Left" Margin="828,451,0,0" VerticalAlignment="Top" Click="Button_StartExport_Click" Width="80" Height="25"/>
                             <ComboBox x:Name="ComboBox_ExportResultSetTarget" HorizontalAlignment="Left" Margin="510,37,0,0" VerticalAlignment="Top" Width="402"/>
                             <CheckBox x:Name="CheckBox_TrySave" Content="Automatically Save Workbook" HorizontalAlignment="Left" Margin="635,453,0,0" VerticalAlignment="Top"/>
                         </Grid>
                     </GroupBox>
-                    <ProgressBar x:Name="ProgressBar_ExportTaskStatus" HorizontalAlignment="Left" Height="38" Margin="338,606,0,0" VerticalAlignment="Top" Width="388"/>
-                    <Label x:Name="Label_ExportStatus" Content="Idle." HorizontalAlignment="Left" Margin="411,649,0,0" VerticalAlignment="Top" FlowDirection="RightToLeft" Width="315"/>
-                    <Button x:Name="Button_ViewExportProcessingReport" IsEnabled="False" Content="View Processing Report" HorizontalAlignment="Left" Margin="784,600,0,0" VerticalAlignment="Top" Click="Button_ViewExportProcessingReport_Click"/>
+                    <GroupBox x:Name="GroupBox_TaskStatus" Header="Task Status" Grid.ColumnSpan="2" Margin="113,553,113,32">
+                        <Grid>
+                            <ProgressBar x:Name="ProgressBar_ExportTaskStatus" HorizontalAlignment="Center" Height="53" Margin="0,44,0,0" VerticalAlignment="Top" Width="817"/>
+                            <Label x:Name="Label_ExportStatus" Content="Idle" HorizontalAlignment="Left" Margin="311,97,0,0" VerticalAlignment="Top" FlowDirection="RightToLeft" Width="575"/>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Tasks">
+                <Grid x:Name="Grid_TasksTab">
+                    <GroupBox x:Name="GroupBox_AllTasks" Header="All Tasks" Margin="38,10,38,36">
+                        <Grid>
+                            <DataGrid x:Name="DataGrid_TaskView" Margin="26,10,26,23" IsReadOnly="True" AutoGenerateColumns="False" MouseDoubleClick="DataGrid_TaskView_MouseDoubleClick"/>
+                        </Grid>
+                    </GroupBox>
                 </Grid>
             </TabItem>
         </TabControl>

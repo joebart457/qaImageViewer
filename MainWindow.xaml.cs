@@ -37,11 +37,18 @@ namespace qaImageViewer
         private ConnectionManager _connectionManager = null;
         private ProcessingReportWindow _processingReportWindow = null;
         private ImageViewer _imageViewerWindow = null;
-        private int? _recentExportId = null; // Refactor 
+
+        private Brush _primaryBackground = new SolidColorBrush(Colors.White);
+        private Brush _primary = new SolidColorBrush(Colors.Blue);
+        private Brush _progressBarFill = new LinearGradientBrush(Colors.Purple, Colors.Pink, 0.0);
+        private Brush _buttonBackground = new SolidColorBrush(Colors.Blue);
+        private Brush _buttonBorder = new SolidColorBrush(Colors.LightBlue);
+        private Brush _buttonForeground = new SolidColorBrush(Colors.White);
+
         public MainWindow()
         {
             InitializeComponent();
-
+            InitializeColorScheme();
             try
             {
                 _connectionManager = new ConnectionManager();
@@ -50,6 +57,7 @@ namespace qaImageViewer
                 SetupImportColumnMappingsEditColumns();
                 SetupExportColumnMappingsEditColumns();
                 SetupPreviousImportResultsDataGrid();
+                SetupTaskViewDataGridColumns();
                 PopulateImportProfilesComboBox();
                 PopulateExportTypeComboBox();
                 PopulateAttributeExportModeComboBox();
@@ -61,6 +69,57 @@ namespace qaImageViewer
                 LoggerService.LogError(ex.ToString());
                 throw ex;
             }
+        }
+
+        private void InitializeColorScheme()
+        {
+            Grid_MappingProfilesTab.Background = _primaryBackground;
+            Grid_ImportTab.Background = _primaryBackground;
+            Grid_ExportTab.Background = _primaryBackground;
+            Grid_TasksTab.Background = _primaryBackground;
+
+            GroupBox_AllTasks.BorderBrush = _primary;
+            GroupBox_AttributeExportOptions.BorderBrush = _primary;
+            GroupBox_ExportOptions.BorderBrush = _primary;
+            GroupBox_Import.BorderBrush = _primary;
+            GroupBox_ImportResults.BorderBrush = _primary;
+            GroupBox_NewFileOptions.BorderBrush = _primary;
+            GroupBox_OverlayOptions.BorderBrush = _primary;
+            GroupBox_TaskStatus.BorderBrush = _primary;
+
+            Rectange_ExportMappingBorder.Stroke = _primary;
+            Rectange_ImportMappingBorder.Stroke = _primary;
+
+            ProgressBar_ExcelImportItemsTask.Foreground = _progressBarFill;
+            ProgressBar_ExportTaskStatus.Foreground = _progressBarFill;
+            ProgressBar_LoadingExcelPreview.Foreground = _progressBarFill;
+
+            Button_AddColumnMapping.Background = _buttonBackground;
+            Button_ChooseExportFile.Background = _buttonBackground;
+            Button_RouteToResults.Background = _buttonBackground;
+            Button_RouteToReviewWindow.Background = _buttonBackground;
+            Button_RunExcelImport.Background = _buttonBackground;
+            //Button_SaveImportProfile.Background = _buttonBackground;
+            Button_SelectExcelTargetFile.Background = _buttonBackground;
+            Button_StartExport.Background = _buttonBackground;
+
+            Button_AddColumnMapping.BorderBrush = _buttonBorder;
+            Button_ChooseExportFile.BorderBrush = _buttonBorder;
+            Button_RouteToResults.BorderBrush = _buttonBorder;
+            Button_RouteToReviewWindow.BorderBrush = _buttonBorder;
+            Button_RunExcelImport.BorderBrush = _buttonBorder;
+            //Button_SaveImportProfile.BorderBrush = _buttonBorder;
+            Button_SelectExcelTargetFile.BorderBrush = _buttonBorder;
+            Button_StartExport.BorderBrush = _buttonBorder;
+
+            Button_AddColumnMapping.Foreground = _buttonForeground;
+            Button_ChooseExportFile.Foreground = _buttonForeground;
+            Button_RouteToResults.Foreground = _buttonForeground;
+            Button_RouteToReviewWindow.Foreground = _buttonForeground;
+            Button_RunExcelImport.Foreground = _buttonForeground;
+            //Button_SaveImportProfile.Foreground = _buttonForeground;
+            Button_SelectExcelTargetFile.Foreground = _buttonForeground;
+            Button_StartExport.Foreground = _buttonForeground;
         }
 
         private void PopulateExportResultSetTargetComboBox()
@@ -88,6 +147,7 @@ namespace qaImageViewer
         private void PopulateImportProfilesComboBox()
         {
             ComboBox_ImportProfilesSelector.ItemsSource = MappingProfileRepository.GetMappingProfiles(_connectionManager);
+            ComboBox_ImportProfilesSelector.Text = "--Select Profile--";
         }
 
         private void PopulatePreviousImportResultsDataGrid()
@@ -434,6 +494,18 @@ namespace qaImageViewer
                     {
                         PopulateExportResultSetTargetComboBox();
                     }
+                    if (tab.Header.ToString() == "Tasks")
+                    {
+                        PopulateTaskViewDataGrid();
+                    }
+                    if (tab.Header.ToString() == "Mapping Profiles")
+                    {
+                        PopulateImportProfilesComboBox();
+                        DataGrid_ImportColumnMappingsEdit.ItemsSource = null;
+                        DataGrid_ImportColumnMappingsView.ItemsSource = null;
+                        DataGrid_ExportColumnMappingsEdit.ItemsSource = null;
+                    }
+
 
                 }
             }
@@ -650,12 +722,12 @@ namespace qaImageViewer
             {
                 if (_processingReportWindow == null || _processingReportWindow.IsLoaded == false)
                 {
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id, selectedResults.TaskId);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.TaskId);
                     _processingReportWindow.Show();
                 } else
                 {
                     _processingReportWindow.Close();
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.Id, selectedResults.TaskId);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, selectedResults.TaskId);
                     _processingReportWindow.Show();
                 }
             }
@@ -691,7 +763,9 @@ namespace qaImageViewer
             string? fileName = ChooseExcelFile();
             if (fileName is not null)
             {
+                Button_StartExport.IsEnabled = false;
                 PopulateExportSheetNamesComboBox(fileName);
+                Button_StartExport.IsEnabled = true;
             }
         }
 
@@ -779,7 +853,6 @@ namespace qaImageViewer
         private async void Button_StartExport_Click(object sender, RoutedEventArgs e)
         {
             Button_StartExport.IsEnabled = false;
-            Button_ViewExportProcessingReport.IsEnabled = false;
             try
             {
                 if (!Enum.IsDefined(typeof(ExportType), ComboBox_ExportType.SelectedItem))
@@ -851,30 +924,72 @@ namespace qaImageViewer
                     Label_ExportStatus.Content = $"exporting row {value.ToString()} of {ProgressBar_ExportTaskStatus.Maximum.ToString()}";
                 });
 
-                _recentExportId = await TaskManager.Launch(_connectionManager, exportTask, progress);
+                await TaskManager.Launch(_connectionManager, exportTask, progress);
             } catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Export failed");
             }
 
             Button_StartExport.IsEnabled = true;
-            Button_ViewExportProcessingReport.IsEnabled = true;
             Label_ExportStatus.Content = "Idle";
         }
 
-        private void Button_ViewExportProcessingReport_Click(object sender, RoutedEventArgs e)
+        private void PopulateTaskViewDataGrid()
         {
-            if (_recentExportId != null)
+            DataGrid_TaskView.ItemsSource = TaskRepository.GetTasks(_connectionManager, "");
+        }
+
+        private void SetupTaskViewDataGridColumns()
+        {
+            DataGrid_TaskView.Columns.Clear();
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Task Id",
+                Binding = new Binding("Id"),
+            });
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Type",
+                Binding = new Binding("Type"),
+            });
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Start Time",
+                Binding = new Binding("StartTime"),
+            });
+
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Update Time",
+                Binding = new Binding("UpdateTime"),
+            });
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Status",
+                Binding = new Binding("Status"),
+            });
+            DataGrid_TaskView.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Data",
+                Binding = new Binding("Data"),
+            });
+            
+        }
+
+        private void DataGrid_TaskView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            AppTask task = (AppTask)DataGrid_TaskView.SelectedItem;
+            if (task is not null)
             {
                 if (_processingReportWindow == null || _processingReportWindow.IsLoaded == false)
                 {
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, -1, _recentExportId.Value);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, task.Id);
                     _processingReportWindow.Show();
                 }
                 else
                 {
                     _processingReportWindow.Close();
-                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, -1, _recentExportId.Value);
+                    _processingReportWindow = new ProcessingReportWindow(_connectionManager, task.Id);
                     _processingReportWindow.Show();
                 }
             }

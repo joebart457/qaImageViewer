@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:qaImageViewer"
         mc:Ignorable="d"
-        Title="Add Attribute" SizeToContent="WidthAndHeight">
+        Title="Add Attribute" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner">
     <Grid Height="135" Width="343">
         <GroupBox Header="Attribute Name" Margin="10,10,10,52">
             <TextBox x:Name="TextBox_AttributeName" HorizontalAlignment="Left" Margin="10,0,0,0" Text="--name--" TextWrapping="Wrap" VerticalAlignment="Center" Width="293" TextChanged="TextBox_AttributeName_TextChanged"/>

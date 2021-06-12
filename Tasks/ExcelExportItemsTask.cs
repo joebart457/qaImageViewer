@@ -51,7 +51,9 @@ namespace qaImageViewer.Tasks
 
         public string GetTaskData()
         {
-            return "";
+            return $"ExportType => {_exportType}, MappingProfileId => {_mappingProfileId}, " 
+                + $"FileName => {_filename}, SheetIndex => {_sheetIndex}, "
+                + $"ResultSetId => {_resultSetId}, AttributeExportMode => {_attributeExportMode}, AttributeExportTargetColumn => {_attributeExportTargetColumn}, TrySave => {_trySave}";
         }
 
         public ExcelExportItemsTask(ConnectionManager connectionManager, ExportType exportType, string filename, int sheetIndex,

@@ -20,9 +20,9 @@ namespace qaImageViewer.Repository
                 var conn = cm.GetSQLConnection();
                 var selectTasksCmd = conn.CreateCommand();
 
-                selectTasksCmd.CommandText = @"SELECT id, type, start_time, update_time, data, status
+                selectTasksCmd.CommandText = @"SELECT id, type, datetime(start_time, 'unixepoch'), datetime(update_time, 'unixepoch'), data, status
                                                         FROM app_task
-                                                        WHERE type ilike @TypeFilter";
+                                                        WHERE type like @TypeFilter";
                 selectTasksCmd.Parameters.Add(new SQLiteParameter("@TypeFilter", $"{typeFilter}%"));
 
                 var reader = selectTasksCmd.ExecuteReader();
@@ -48,7 +48,7 @@ namespace qaImageViewer.Repository
             }
         }
 
-        public static void InsertTask(ConnectionManager cm, AppTask task, out AppTask outTask)
+        public static int InsertTask(ConnectionManager cm, AppTask task)
         {
             try
             {
@@ -64,8 +64,7 @@ namespace qaImageViewer.Repository
                 insertTaskCmd.Parameters.Add(new SQLiteParameter("@Status", task.Status));
 
                 insertTaskCmd.ExecuteNonQuery();
-                task.Id = (int)conn.LastInsertRowId;
-                outTask = task;
+                return (int)conn.LastInsertRowId;
             }
             catch (Exception ex)
             {

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:qaImageViewer"
         mc:Ignorable="d"
-        Title="ProcessingReportWindow" Height="800 " Width="1200">
+        Title="ProcessingReportWindow" Height="800 " Width="1200" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid>
             <GroupBox Header="Processing Exceptions" Margin="27,366,27,32">

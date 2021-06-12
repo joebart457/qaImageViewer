@@ -12,15 +12,16 @@ namespace qaImageViewer.Service
     class ImageHelperService
     {
 
-        public static BitmapImage GetImageSourceFromItemProperties(List<DocumentColumn> properties, ImportColumnMapping mapping, Rotation rotation)
+        public static BitmapImage GetImageSourceFromItemProperties(List<DocumentColumn> properties, ImportColumnMapping mapping, Rotation rotation, string pathPrefix = "")
         {
             if (properties is null) return null;
             DocumentColumn col = properties.Find(x => x.Mapping.ColumnName == mapping.ColumnName);
             if (col is null || col.Value is null) return null;
-            if (!System.IO.File.Exists(col.Value.ToString())) return null;
+            string filepath = pathPrefix + col.Value.ToString();
+            if (!System.IO.File.Exists(filepath)) return null;
             BitmapImage bmp = new BitmapImage();
             bmp.BeginInit();
-            bmp.UriSource = new Uri(col.Value.ToString());
+            bmp.UriSource = new Uri(filepath);
             switch (rotation) {
                 case Rotation.Rotate90:
                     bmp.Rotation = Rotation.Rotate90;

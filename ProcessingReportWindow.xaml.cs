@@ -1,5 +1,6 @@
 ﻿using qaImageViewer.Models;
 using qaImageViewer.Repository;
+using qaImageViewer.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,19 +26,35 @@ namespace qaImageViewer
         private int _resultSetId { get; set; }
         private int _taskId { get; set; }
         private ConnectionManager _connectionManager { get; set; }
-        public ProcessingReportWindow(ConnectionManager cm, int resultSetId, int taskId)
+        public ProcessingReportWindow(ConnectionManager cm, int taskId)
         {
             InitializeComponent();
             _connectionManager = cm;
-            _resultSetId = resultSetId;
-            _taskId = taskId;
 
+            _taskId = taskId;
+            this.Title = $"Processing Report - {{Task {_taskId}}}";
+
+            TryGetResultSetId();
             SetupProcessingExceptionDataGridColumns();
             SetupRowDataViewDataGridColumns();
             PopulateProcessingExceptionsDataGrid();
             PopulateRowSelectListBox();
         }
 
+        private void TryGetResultSetId()
+        {
+            try
+            {
+                var importResults = ImportResultRepository.GetImportResultByTaskId(_connectionManager, _taskId);
+                if (importResults is not null)
+                {
+                    _resultSetId = importResults.Id;
+                }
+            } catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
 
         private void SetupProcessingExceptionDataGridColumns()
         {
@@ -72,8 +89,11 @@ namespace qaImageViewer
 
         private void PopulateRowSelectListBox()
         {
-            ListBox_RowSelect.ItemsSource =
-                 ResultSetRepository.GetListItemsFromResultSet(_connectionManager, _resultSetId, new List<ColumnFilter>());
+            if (_resultSetId > 0)
+            {
+                ListBox_RowSelect.ItemsSource =
+                     ResultSetRepository.GetListItemsFromResultSet(_connectionManager, _resultSetId, new List<ColumnFilter>());
+            }
         }
         
         private void SetupRowDataViewDataGridColumns()

@@ -50,6 +50,45 @@ namespace qaImageViewer.Repository
         }
 
 
+        public static ImportResults GetImportResultByTaskId(ConnectionManager cm, int taskId)
+        {
+            try
+            {
+                Utilities.CheckNull(cm);
+
+                List<ImportResults> results = new List<ImportResults>();
+                var conn = cm.GetSQLConnection();
+                var selectImportResultCmd = conn.CreateCommand();
+
+                selectImportResultCmd.CommandText = @"SELECT id, profile_id, table_name, workbook_name, worksheet_name, datetime(end_time, 'unixepoch'), task_id
+                                                      FROM import_result WHERE task_id = @TaskId";
+                selectImportResultCmd.Parameters.Add(new SQLiteParameter("@TaskId", taskId));
+
+                var reader = selectImportResultCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    results.Add(new ImportResults
+                    {
+                        Id = reader.GetInt32(0),
+                        ProfileId = reader.GetInt32(1),
+                        ResultTableName = reader.GetString(2),
+                        WorkbookName = reader.GetString(3),
+                        WorksheetName = reader.GetString(4),
+                        EndTime = reader.GetDateTime(5),
+                        TaskId = reader.GetInt32(6)
+                    });
+                }
+
+                return results.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogError(ex.ToString());
+                throw ex;
+            }
+        }
+
+
         public static List<ImportResultsListItem> GetImportResultListItems(ConnectionManager cm)
         {
             try

@@ -30,6 +30,7 @@ namespace qaImageViewer
             _connectionManager = cm;
             _resultSetId = resultSetId;
 
+            SetWindowTitle();
             SetupPropertyViewDataGridColumns();
             PopulateItemSelectionListBox();
             PopulateFilePathPropertyComboBox();
@@ -39,6 +40,12 @@ namespace qaImageViewer
             PopulateColumnFiltersDataGrid();
         }
 
+        private void SetWindowTitle()
+        {
+            ImportResults importResults = ImportResultRepository.GetImportResult(_connectionManager, _resultSetId);
+            string resultsName = importResults is null ? "n/a" : importResults.ToString();
+            this.Title = $"ImageViewer - {resultsName}";
+        }
 
         private void PopulateColumnFiltersDataGrid()
         {
@@ -105,6 +112,7 @@ namespace qaImageViewer
             ComboBox_ImageRotation.ItemsSource = Enum.GetValues(typeof(Rotation));
             ComboBox_ImageRotation.SelectedItem = Rotation.Rotate0;
         }
+
         private void PopulateItemSelectionListBox()
         {
             List<ColumnFilter> filters = new List<ColumnFilter>();
@@ -177,7 +185,8 @@ namespace qaImageViewer
                             ImageHelperService.GetImageSourceFromItemProperties(
                                 ResultSetRepository.GetFullRowDataAsKeyValuePairs(_connectionManager, selected),
                                 ColumnMappingService.ConvertFromListItem(filePathProperty),
-                                rotation
+                                rotation,
+                                TextBox_PathPrefix.Text
                             );
                     }
                     catch (Exception ex)
@@ -236,6 +245,11 @@ namespace qaImageViewer
                     MessageBox.Show(ex.ToString());
                 }
            }
+        }
+
+        private void TextBox_PathPrefix_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            LoadMainImage();
         }
     }
 }

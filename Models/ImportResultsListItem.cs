@@ -19,7 +19,7 @@ namespace qaImageViewer.Models
 
         public override string ToString()
         {
-            return $"{ProfileName} - {WorkbookName}:{WorksheetName} ({EndTime.ToString()})";
+            return $"{{TaskId:{TaskId}}}{ProfileName} - {WorkbookName}:{WorksheetName} ({EndTime.ToString()})";
         }
     }
 }

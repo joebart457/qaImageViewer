@@ -23,7 +23,8 @@ namespace qaImageViewer.Managers
                 Data = task.GetTaskData()
             };
 
-            TaskRepository.InsertTask(cm, t, out t);
+
+            t.Id = TaskRepository.InsertTask(cm, t);
 
             task.TaskId = t.Id;
 
@@ -35,6 +36,8 @@ namespace qaImageViewer.Managers
             try
             {
                 await Task.Run(() => { task.Execute(progress, callback); });
+                t.Status = AppTaskStatus.SUCCESS;
+                TaskRepository.UpdateTask(cm, t);
                 return t.Id;
             } catch (Exception ex)
             {
@@ -47,6 +50,8 @@ namespace qaImageViewer.Managers
                     ErrorTrace = ex.ToString(),
                     ResultSetId = -1,
                 });
+                t.Status = AppTaskStatus.ERROR;
+                TaskRepository.UpdateTask(cm, t);
                 throw new TaskException(ex.Message);
             }
         }

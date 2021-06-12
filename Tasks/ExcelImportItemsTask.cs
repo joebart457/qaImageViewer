@@ -26,7 +26,8 @@ namespace qaImageViewer.Tasks
 
         public string GetTaskData()
         {
-            return "";
+            return $"MappingProfileId => {_mappingProfileId}, "
+                + $"FileName => {_filename}, SheetIndex => {_sheetIndex}, BatchSize => {_batchSize}";
         }
 
 

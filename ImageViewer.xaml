@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:qaImageViewer"
         mc:Ignorable="d"
-        Title="ImageViewer" SizeToContent="WidthAndHeight">
+        Title="ImageViewer" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
     <Grid Height="1000" Width="1800">
         <Grid Background="#FFEEEEEE">
             <local:ZoomBorder x:Name="border" ClipToBounds="True" Background="Gray" Margin="338,103,418,28">
@@ -19,6 +19,7 @@
                     <ComboBox x:Name="ComboBox_FilePathProperty" HorizontalAlignment="Left" Margin="97,13,0,0" VerticalAlignment="Top" Width="234" SelectionChanged="ComboBox_FilePathProperty_SelectionChanged"/>
                     <ComboBox x:Name="ComboBox_ImageRotation" HorizontalAlignment="Left" Margin="853,13,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="ComboBox_ImageRotation_SelectionChanged"/>
                     <Label Content="Image Path" HorizontalAlignment="Left" Margin="22,11,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="TextBox_PathPrefix" HorizontalAlignment="Left" Margin="433,0,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Center" Width="351" TextChanged="TextBox_PathPrefix_TextChanged"/>
                 </Grid>
             </GroupBox>
             <GroupBox Header="Attributes" Margin="1432,589,10,28">
@@ -45,6 +46,7 @@
                 </Grid>
             </GroupBox>
         </Grid>
+        <Label Content="Path Prefix" HorizontalAlignment="Left" Margin="705,43,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
